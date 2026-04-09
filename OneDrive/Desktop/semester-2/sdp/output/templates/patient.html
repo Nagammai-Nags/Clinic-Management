@@ -50,13 +50,33 @@
             border-radius: 10px;
             border: 2px solid #4facfe;
         }
+
+        footer {
+            margin-top: 30px;
+            color: white;
+            text-align: center;
+        }
     </style>
 </head>
 
 <body>
 
+<!-- NAVIGATION BAR -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/"> Clinic System</a>
+
+        <div class="navbar-nav">
+            <a class="nav-link active" href="/">Patient</a>
+            <a class="nav-link" href="/doctor">Doctor</a>
+            <a class="nav-link" href="/doctor/view">Appointment</a>
+            <a class="nav-link" href="#">Billing</a>
+        </div>
+    </div>
+</nav>
+
 <div class="container">
-    <h2 class="title">🏥 Clinic Management System</h2>
+    <h2 class="title">Patient Module</h2>
 
     <!-- Add Patient -->
     <div class="card p-4 mb-4">
@@ -113,6 +133,10 @@
             </tbody>
         </table>
     </div>
+
+    <footer>
+        <p> Clinic Management System © 2026</p>
+    </footer>
 </div>
 
 <script>
@@ -122,6 +146,7 @@ document.getElementById("search").addEventListener("keyup", function() {
 
     rows.forEach(row => {
         let name = row.cells[1].innerText.toLowerCase();
+
         if (name.includes(value)) {
             row.style.display = "";
         } else {
