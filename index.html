@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinic Management - Login</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+
+<body class="bg-indigo-dark text-white font-inter">
+
+    <div class="container min-vh-100 d-flex flex-column justify-content-center align-items-center">
+        <!-- Logo/Header -->
+        <div class="text-center mb-5 animate-fade-in">
+            <h1 class="display-4 fw-bold text-gradient-indigo">REI Clinic</h1>
+            <p class="text-secondary tracking-widest">Manage your clinic efficiently</p>
+        </div>
+
+        <!-- Auth Card -->
+        <div class="auth-card glass-morphism p-4 p-md-5 rounded-4 animate-slide-up">
+            <!-- User Type Toggle -->
+            <div class="auth-toggle-group d-flex p-1 bg-dark-soft rounded-3 mb-4">
+                <button id="toggle-owner" class="btn flex-grow-1 toggle-btn active">Owner</button>
+                <button id="toggle-others" class="btn flex-grow-1 toggle-btn">Others</button>
+            </div>
+
+            <!-- Forms Container -->
+            <div id="forms-container">
+                <!-- Owner Form (Default) -->
+                <div id="owner-forms" class="">
+                    <div id="owner-login-view">
+                        <h2 class="h4 mb-4">Owner Login</h2>
+                        <form id="owner-login-form">
+                            <div class="mb-3">
+                                <label for="owner-email" class="form-label text-sm text-secondary">Email Address</label>
+                                <input type="email" name="email" class="form-control custom-input" id="owner-email"
+                                    placeholder="name@clinic.com" required>
+                            </div>
+                            <div class="mb-4">
+                                <label for="owner-pass" class="form-label text-sm text-secondary">Password</label>
+                                <input type="password" name="password" class="form-control custom-input" id="owner-pass"
+                                    placeholder="••••••••" required>
+                            </div>
+                            <button type="submit" class="btn btn-indigo w-100 py-2 mb-3">Sign In</button>
+                            <p class="text-center text-sm text-secondary">
+                                New here? <a href="#" id="go-to-signup" class="text-indigo text-decoration-none">Create
+                                    an account</a>
+                            </p>
+                        </form>
+                    </div>
+
+                    <div id="owner-signup-view" class="d-none">
+                        <h2 class="h4 mb-4">Owner Registration</h2>
+                        <form id="owner-signup-form">
+                            <div class="mb-3">
+                                <label for="signup-clinic" class="form-label text-sm text-secondary">Clinic Name</label>
+                                <input type="text" name="clinic_name" class="form-control custom-input"
+                                    id="signup-clinic" placeholder="Clinic Name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="signup-email" class="form-label text-sm text-secondary">Email
+                                    Address</label>
+                                <input type="email" name="email" class="form-control custom-input" id="signup-email"
+                                    placeholder="name@clinic.com" required>
+                            </div>
+                            <div class="mb-4">
+                                <label for="signup-pass" class="form-label text-sm text-secondary">Password</label>
+                                <input type="password" name="password" class="form-control custom-input"
+                                    id="signup-pass" placeholder="••••••••" required>
+                            </div>
+                            <button type="submit" class="btn btn-indigo w-100 py-2 mb-3">Create Account</button>
+                            <p class="text-center text-sm text-secondary">
+                                Already have an account? <a href="#" id="go-to-login"
+                                    class="text-indigo text-decoration-none">Sign In</a>
+                            </p>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Others Form -->
+                <div id="others-forms" class="d-none">
+                    <h2 class="h4 mb-4">Staff Login</h2>
+                    <form id="others-login-form">
+                        <div class="mb-3">
+                            <label for="others-id" class="form-label text-sm text-secondary">Staff Key / ID</label>
+                            <input type="text" name="staff_id" class="form-control custom-input" id="others-id"
+                                placeholder="DOC-1234" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="others-pass" class="form-label text-sm text-secondary">Password</label>
+                            <input type="password" name="password" class="form-control custom-input" id="others-pass"
+                                placeholder="••••••••" required>
+                        </div>
+                        <button type="submit" class="btn btn-indigo w-100 py-2 mb-3">Sign In</button>
+                        <p class="text-secondary text-sm text-center italic">
+                            Contact your Owner for credentials.
+                        </p>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-5 text-secondary text-sm">
+            &copy; 2026 Clinic Management. All rights reserved.
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="assets/js/auth.js"></script>
+</body>
+
+</html>

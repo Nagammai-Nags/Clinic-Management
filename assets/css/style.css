@@ -1,0 +1,123 @@
+:root {
+    --indigo-primary: #6366f1;
+    --indigo-dark: #0f172a;
+    --indigo-light: #818cf8;
+    --dark-soft: #1e293b;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+}
+
+body {
+    background-color: var(--indigo-dark);
+    color: var(--text-primary);
+    overflow-x: hidden;
+}
+
+.font-inter {
+    font-family: 'Inter', sans-serif;
+}
+
+.text-gradient-indigo {
+    background: linear-gradient(135deg, var(--indigo-light) 0%, var(--indigo-primary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.glass-morphism {
+    background: rgba(30, 41, 59, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 480px;
+    border-radius: 20px;
+}
+
+.bg-dark-soft {
+    background-color: rgba(15, 23, 42, 0.5);
+}
+
+.toggle-btn {
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.toggle-btn.active {
+    background-color: var(--indigo-primary);
+    color: white;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.custom-input {
+    background-color: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white !important;
+    padding: 12px;
+    transition: all 0.3s ease;
+}
+
+.custom-input::placeholder {
+    color: #475569;
+}
+
+.custom-input:focus {
+    background-color: rgba(15, 23, 42, 0.8);
+    border-color: var(--indigo-primary);
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+}
+
+.btn-indigo {
+    background-color: var(--indigo-primary);
+    border: none;
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-indigo:hover {
+    background-color: var(--indigo-light);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.btn-indigo:active {
+    transform: translateY(0);
+}
+
+.tracking-widest {
+    letter-spacing: 0.2em;
+}
+
+.text-sm {
+    font-size: 0.875rem;
+}
+
+.italic {
+    font-style: italic;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+    animation: fadeIn 1s ease-out;
+}
+
+.animate-slide-up {
+    animation: slideUp 0.8s ease-out;
+}
