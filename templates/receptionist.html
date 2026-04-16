@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinic Management - Receptionist</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            background: linear-gradient(to right, #4facfe, #00f2fe);
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .navbar {
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .container {
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            border: none;
+        }
+
+        .btn-custom {
+            background-color: #4facfe;
+            color: white;
+            border: none;
+        }
+
+        .btn-custom:hover {
+            background-color: #00c6ff;
+            color: white;
+        }
+
+        th {
+            background-color: #4facfe;
+            color: white;
+        }
+
+        h2, h4 {
+            font-weight: 600;
+        }
+
+        .schedule-card {
+            min-height: 300px;
+        }
+
+        .status-pending {
+            color: orange;
+            font-weight: bold;
+        }
+
+        .status-completed {
+            color: green;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="#">🏥 Clinic Management</a>
+        <div class="navbar-nav">
+            <a class="nav-link active" href="/">Receptionist</a>
+            <a class="nav-link" href="#">Doctor</a>
+            <a class="nav-link" href="#">Billing</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <h2 class="text-center text-white mb-4">Receptionist Dashboard</h2>
+
+    <div class="row">
+        <!-- Left Section -->
+        <div class="col-md-8">
+
+            <!-- Add Patient Form -->
+            <div class="card p-4 mb-4">
+                <h4>➕ Add Patient & Appointment</h4>
+
+                <form action="/add_patient" method="post">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <input type="number" name="id" class="form-control" placeholder="Patient ID" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <input type="text" name="name" class="form-control" placeholder="Patient Name" required>
+                        </div>
+
+                        <div class="col-md-4">
+                            <input type="number" name="age" class="form-control" placeholder="Age" required>
+                        </div>
+
+                        <div class="col-md-8">
+                            <input type="text" name="problem" class="form-control" placeholder="Problem" required>
+                        </div>
+
+                        <div class="col-md-12">
+                            <select name="shift" class="form-control" required>
+                                <option value="">Select Shift</option>
+                                <option value="1">Morning Shift (9 AM - 1 PM)</option>
+                                <option value="2">Evening Shift (4 PM - 8 PM)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-custom mt-3">
+                        Book Appointment
+                    </button>
+                </form>
+            </div>
+
+            <!-- Patient Table -->
+            <div class="card p-4">
+                <h4>📋 Patient Records</h4>
+
+                <table class="table table-bordered mt-3">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Doctor</th>
+                            <th>Shift</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for p in patients %}
+                        <tr>
+                            <td>{{ p.id }}</td>
+                            <td>{{ p.name }}</td>
+                            <td>{{ p.doctor }}</td>
+                            <td>{{ p.shift }}</td>
+
+                            <td>
+                                {% if p.status == "Completed" %}
+                                    <span class="status-completed">Completed</span>
+                                {% else %}
+                                    <span class="status-pending">Pending</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <form action="/update_status" method="post">
+                                    <input type="hidden" name="id" value="{{ p.id }}">
+                                    <button type="submit" class="btn btn-success btn-sm">
+                                        Mark Completed
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Right Section -->
+        <div class="col-md-4">
+            <div class="card p-4 schedule-card">
+                <h4>🕒 Doctor Schedule</h4>
+                <hr>
+
+                <p>
+                    <strong>Morning Shift</strong><br>
+                    9:00 AM - 1:00 PM<br>
+                    Dr. Naveen Kumar
+                </p>
+
+                <p>
+                    <strong>Evening Shift</strong><br>
+                    4:00 PM - 8:00 PM<br>
+                    Dr. Vinayagamoorthy
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
