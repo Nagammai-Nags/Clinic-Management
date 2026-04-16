@@ -1,0 +1,4 @@
+1,jungkook,28,headache
+2,taehyung,30,heart attack
+3,jimin,30,throat pain
+4,jin,34,fever

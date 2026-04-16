@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Doctor Appointment Module</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: linear-gradient(to right, #4facfe, #00f2fe);
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .container {
+            margin-top: 30px;
+        }
+
+        .title {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+        th {
+            background-color: #4facfe;
+            color: white;
+        }
+
+        footer {
+            margin-top: 30px;
+            color: white;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/"> Clinic System</a>
+
+        <div class="navbar-nav">
+            <a class="nav-link" href="/">Patient</a>
+            <a class="nav-link active" href="/doctor">Doctor</a>
+            <a class="nav-link" href="/doctor/view">Appointment</a>
+            <a class="nav-link" href="#">Billing</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+
+    <h2 class="title"> Doctor Appointment Module</h2>
+
+    <div class="card p-4 mb-4">
+        <h4>Book Appointment</h4>
+
+        <form action="/doctor/add" method="post">
+            <div class="row">
+                <div class="col-md-3">
+                    <input type="number" name="id" class="form-control" placeholder="Patient ID" required>
+                </div>
+
+                <div class="col-md-3">
+                    <input type="text" name="name" class="form-control" placeholder="Patient Name" required>
+                </div>
+
+                <div class="col-md-3">
+                    <select name="doctor" class="form-control" required>
+                        <option value="Dr.Naveen Kumar">Dr. Naveen Kumar</option>
+                        <option value="Dr.Vinayagamoorthy">Dr. Vinayagamoorthy</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <input type="text" name="time" class="form-control" placeholder="Appointment Time" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary mt-3">Book Appointment</button>
+        </form>
+    </div>
+
+    <div class="card p-4">
+        <h4>Appointment List</h4>
+
+        <table class="table table-bordered mt-3">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Patient</th>
+                    <th>Doctor</th>
+                    <th>Time</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for a in appointments %}
+                <tr>
+                    <td>{{ a[0] }}</td>
+                    <td>{{ a[1] }}</td>
+                    <td>{{ a[2] }}</td>
+                    <td>{{ a[3] }}</td>
+                    <td>{{ a[4] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <footer>
+        <p>Clinic Management System © 2026</p>
+    </footer>
+
+</div>
+
+</body>
+</html>
