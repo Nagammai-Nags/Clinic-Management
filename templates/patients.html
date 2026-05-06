@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h2 class="mb-1">Receptionist - Patient List</h2>
+    <div class="text-muted">Displays every patient with assigned doctor and queue status.</div>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('add_patient') }}">Add Patient</a>
+</div>
+
+<div class="toolbar mb-3">
+  <input class="form-control" id="patientSearch" placeholder="Search by patient, phone, doctor, problem, or status">
+</div>
+
+<div class="table-responsive">
+  <table class="table align-middle table-hover" id="patientTable">
+    <thead>
+      <tr>
+        <th>ID</th><th>Name</th><th>Age</th><th>Phone</th><th>Blood</th>
+        <th>Problem</th><th>Assigned Doctor</th><th>Status</th><th>Assign / Change Doctor</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for patient in patients %}
+      <tr>
+        <td>{{ patient.id }}</td>
+        <td>{{ patient.name }}</td>
+        <td>{{ patient.age }}</td>
+        <td>{{ patient.phone }}</td>
+        <td>{{ patient.blood }}</td>
+        <td>{{ patient.problem }}</td>
+        <td>
+          <strong>{{ patient.doctor }}</strong>
+          <div class="small text-muted">{{ patient.specialization }}</div>
+        </td>
+        <td><span class="badge status-badge">{{ patient.status }}</span></td>
+        <td>
+          <form method="post" action="{{ url_for('assign') }}" class="assign-form">
+            <input type="hidden" name="patient_id" value="{{ patient.id }}">
+            <input class="form-control form-control-sm" name="problem" placeholder="Problem type" required>
+            <select class="form-select form-select-sm" name="doctor_id" required>
+              <option value="">Doctor</option>
+              {% for doctor in doctors %}
+              <option value="{{ doctor.id }}">{{ doctor.name }} - {{ doctor.specialization }}</option>
+              {% endfor %}
+            </select>
+            <button class="btn btn-sm btn-success">Assign</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
