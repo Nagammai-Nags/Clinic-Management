@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="login-shell">
+  <section class="login-panel">
+    <h1>Clinic OPD Login</h1>
+    <p class="text-muted mb-4">Use owner login to access receptionist, doctor, and billing pages together.</p>
+    <form method="post">
+      <div class="mb-3">
+        <label class="form-label">Username</label>
+        <input class="form-control" name="username" required autofocus>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-control" name="password" required>
+      </div>
+      <button class="btn btn-primary w-100">Login</button>
+    </form>
+    <div class="small text-muted mt-4">
+      owner/owner123, reception/rec123, billing/bill123<br>
+      doctor/doc123 for Dr. Varun, doctor2/doc123 for Dr. Tharun, doctor3/doc123 for Dr. Renita
+    </div>
+  </section>
+</div>
+{% endblock %}

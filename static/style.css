@@ -1,0 +1,103 @@
+body {
+  background: #f6f8fb;
+  color: #1f2937;
+}
+
+.login-shell {
+  min-height: calc(100vh - 100px);
+  display: grid;
+  place-items: center;
+}
+
+.login-panel {
+  width: min(420px, 100%);
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 32px;
+  box-shadow: 0 18px 40px rgba(31, 41, 55, 0.08);
+}
+
+.metric, .module-link {
+  display: block;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 18px;
+  text-decoration: none;
+  color: #1f2937;
+}
+
+.metric span {
+  display: block;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.metric strong {
+  font-size: 26px;
+}
+
+.module-link {
+  font-weight: 700;
+}
+
+.table {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+}
+
+.toolbar {
+  max-width: 520px;
+}
+
+.assign-form, .pay-form {
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) minmax(170px, 1fr) auto;
+  gap: 8px;
+}
+
+.pay-form {
+  grid-template-columns: 100px 95px 85px auto;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  max-width: 860px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.grid-wide {
+  grid-column: 1 / -1;
+}
+
+.stack-form {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.empty-state {
+  background: #fff;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  padding: 20px;
+  color: #64748b;
+}
+
+.status-badge {
+  background: #e8f1ff;
+  color: #0f4c81;
+}
+
+@media (max-width: 900px) {
+  .assign-form, .pay-form, .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
