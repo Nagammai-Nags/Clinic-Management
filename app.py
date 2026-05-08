@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -28,18 +29,44 @@ def compile_backend():
     latest_source_time = max(source.stat().st_mtime for source in backend_sources)
     if BACKEND_EXE.exists() and BACKEND_EXE.stat().st_mtime >= latest_source_time:
         return
-    compiler = "gcc"
-    subprocess.run(
-        [compiler, str(BACKEND_SRC), "-o", str(BACKEND_EXE)],
-        cwd=ROOT,
-        check=True,
-        capture_output=True,
-        text=True,
-    )
+
+    compiler = os.environ.get("CLINIC_BACKEND_CC")
+    if compiler:
+        compiler_path = shutil.which(compiler) or compiler
+    else:
+        compiler_path = next(
+            (path for name in ("gcc", "clang", "cc") if (path := shutil.which(name))),
+            None,
+        )
+
+    if not compiler_path:
+        raise RuntimeError(
+            "No C compiler was found. Install GCC/MinGW-w64 or Clang and make sure it is on PATH. "
+            "You can also set CLINIC_BACKEND_CC to your compiler executable."
+        )
+
+    try:
+        subprocess.run(
+            [compiler_path, "-std=c11", str(BACKEND_SRC), "-o", str(BACKEND_EXE)],
+            cwd=ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except FileNotFoundError as exc:
+        raise RuntimeError(
+            f"C compiler '{compiler_path}' was not found. Set CLINIC_BACKEND_CC to a valid compiler path."
+        ) from exc
+    except subprocess.CalledProcessError as exc:
+        details = (exc.stderr or exc.stdout or "").strip()
+        raise RuntimeError(f"Backend compilation failed:\n{details}") from exc
 
 
 def run_backend(*args):
-    compile_backend()
+    try:
+        compile_backend()
+    except RuntimeError as exc:
+        raise RuntimeError(str(exc)) from exc
     result = subprocess.run(
         [str(BACKEND_EXE), *map(str, args)],
         cwd=ROOT,

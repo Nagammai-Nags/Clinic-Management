@@ -1,0 +1,6 @@
+__pycache__/
+*.py[cod]
+
+# Built locally from backend/clinic_backend.c by app.py.
+backend/clinic_backend
+backend/clinic_backend.exe
