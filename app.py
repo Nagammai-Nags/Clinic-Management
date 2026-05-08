@@ -1,6 +1,7 @@
 import os
 import shutil
 import subprocess
+from datetime import date, datetime
 from pathlib import Path
 
 from flask import Flask, flash, redirect, render_template, request, session, url_for
@@ -114,6 +115,23 @@ def can_open_appointment(appointment_id):
     return any(item["appointment_id"] == str(appointment_id) for item in doctor_queue)
 
 
+def monthly_income_series(invoices):
+    today = date.today()
+    daily_totals = [0.0] * 31
+
+    for invoice in invoices:
+        if invoice.get("status") != "Paid":
+            continue
+        try:
+            invoice_date = datetime.strptime(invoice.get("date", ""), "%Y-%m-%d").date()
+        except ValueError:
+            continue
+        if invoice_date.year == today.year and invoice_date.month == today.month and 1 <= invoice_date.day <= 31:
+            daily_totals[invoice_date.day - 1] += float(invoice.get("paid") or 0)
+
+    return [{"day": day, "amount": daily_totals[day - 1]} for day in range(1, 32)]
+
+
 @app.context_processor
 def inject_user():
     return {
@@ -153,7 +171,14 @@ def dashboard():
         return guard
     stat_fields = ["patients", "appointments", "invoices", "pending", "total", "paid"]
     stats = rows("stats", stat_fields)[0]
-    return render_template("dashboard.html", stats=stats)
+    income_series = []
+    if session.get("role") == "owner":
+        invoice_fields = [
+            "invoice_id", "patient_id", "patient_name", "patient_phone", "doctor", "consultation",
+            "medicine", "lab", "total", "paid", "status", "method", "date",
+        ]
+        income_series = monthly_income_series(rows("billing", invoice_fields))
+    return render_template("dashboard.html", stats=stats, income_series=income_series)
 
 
 @app.route("/patients")

@@ -18,6 +18,37 @@
   <div class="col-md-2"><div class="metric"><span>Collected</span><strong>Rs. {{ stats.paid }}</strong></div></div>
 </div>
 
+{% if current_role == 'owner' %}
+<div class="owner-analytics-center">
+  <section class="income-panel" aria-labelledby="incomeChartTitle">
+    <div class="income-panel__header">
+      <div>
+        <h3 id="incomeChartTitle">Monthly Clinic Income</h3>
+        <p>Daily paid income trends for the current month</p>
+      </div>
+    </div>
+
+    <div
+      class="income-chart"
+      data-income='{{ income_series | tojson }}'
+      aria-label="Line graph showing daily paid income from day 1 to day 31"
+    >
+      <svg viewBox="0 0 900 420" role="img" aria-labelledby="incomeChartTitle incomeChartDesc">
+        <desc id="incomeChartDesc">The X-axis shows days 1 to 31 and the line shows the monthly clinic income trend.</desc>
+        <g class="chart-grid"></g>
+        <g class="chart-y-labels"></g>
+        <g class="chart-x-labels"></g>
+        <path class="chart-area" d=""></path>
+        <path class="chart-line" d=""></path>
+        <g class="chart-points"></g>
+        <text class="axis-title axis-title--x" x="474" y="398">Days</text>
+        <text class="axis-title axis-title--y" x="-179" y="22" transform="rotate(-90)">Paid Income</text>
+      </svg>
+    </div>
+  </section>
+</div>
+{% endif %}
+
 <div class="row g-3">
   {% if current_role in ['reception', 'owner'] %}
   <div class="col-md-4"><a class="module-link" href="{{ url_for('patients') }}">Receptionist Panel</a></div>
