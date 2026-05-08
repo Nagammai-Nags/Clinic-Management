@@ -1,0 +1,52 @@
+<div class="modal fade" id="{{ modal_id }}" tabindex="-1" aria-labelledby="{{ modal_id }}Label" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+    <div class="modal-content history-modal">
+      <div class="modal-header">
+        <div>
+          <h5 class="modal-title" id="{{ modal_id }}Label">{{ patient.name }} <span class="text-muted">#{{ patient.id }}</span></h5>
+          <div class="small text-muted">{{ patient.phone }} | {{ patient.gender }} | Age {{ patient.age }} | Blood {{ patient.blood }}</div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="patient-summary mb-3">
+          <div>
+            <span>Address</span>
+            <strong>{{ patient.address }}</strong>
+          </div>
+          <div>
+            <span>Current Problem</span>
+            <strong>{{ patient.problem }}</strong>
+          </div>
+          <div>
+            <span>Assigned Doctor</span>
+            <strong>{{ patient.doctor }}</strong>
+          </div>
+          <div>
+            <span>Status</span>
+            <strong>{{ patient.status }}</strong>
+          </div>
+        </div>
+
+        <h6 class="mb-2">Previous Visits and Prescriptions</h6>
+        {% if history %}
+        <div class="history-list">
+          {% for visit in history %}
+          <div class="history-card">
+            <div class="d-flex justify-content-between gap-3 flex-wrap">
+              <strong>{{ visit.date }}</strong>
+              <span class="text-muted">{{ visit.doctor }}</span>
+            </div>
+            <div><span>Symptoms:</span> {{ visit.symptoms }}</div>
+            <div><span>Diagnosis:</span> {{ visit.diagnosis }}</div>
+            <div><span>Prescription:</span> {{ visit.prescription }}</div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">No previous history or prescription found for this patient.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>

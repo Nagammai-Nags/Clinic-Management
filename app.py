@@ -23,6 +23,8 @@ USERS = {
     "owner": {"password": "owner123", "role": "owner"},
 }
 
+HISTORY_FIELDS = ["visit_id", "date", "doctor", "symptoms", "diagnosis", "prescription"]
+
 
 def compile_backend():
     backend_sources = list((ROOT / "backend").glob("*.c"))
@@ -87,6 +89,10 @@ def rows(command, fields, *args):
         item = {field: parts[index] if index < len(parts) else "" for index, field in enumerate(fields)}
         data.append(item)
     return data
+
+
+def patient_histories(patient_ids):
+    return {str(patient_id): rows("history", HISTORY_FIELDS, patient_id) for patient_id in patient_ids}
 
 
 def require_login(*allowed):
@@ -162,10 +168,12 @@ def patients():
         "problem", "doctor", "specialization", "status", "appointment_id",
     ]
     doctor_fields = ["id", "name", "specialization", "available", "fee"]
+    patient_list = rows("list_patients", patient_fields)
     return render_template(
         "patients.html",
-        patients=rows("list_patients", patient_fields),
+        patients=patient_list,
         doctors=rows("list_doctors", doctor_fields),
+        histories=patient_histories(patient["id"] for patient in patient_list),
     )
 
 
@@ -210,11 +218,20 @@ def doctor():
     else:
         selected = session.get("doctor_id", "0")
     queue_fields = ["appointment_id", "patient_id", "patient_name", "doctor", "problem", "status", "date"]
+    patient_fields = [
+        "id", "name", "age", "gender", "phone", "address", "blood",
+        "problem", "doctor", "specialization", "status", "appointment_id",
+    ]
+    queue = rows("queue", queue_fields, selected)
+    patient_lookup = {patient["id"]: patient for patient in rows("list_patients", patient_fields)}
+    for item in queue:
+        item["patient"] = patient_lookup.get(item["patient_id"], {})
     return render_template(
         "doctor.html",
         doctors=rows("list_doctors", doctor_fields),
         selected=selected,
-        queue=rows("queue", queue_fields, selected),
+        queue=queue,
+        histories=patient_histories(item["patient_id"] for item in queue),
     )
 
 
@@ -238,7 +255,6 @@ def diagnosis(appointment_id, patient_id):
     if not can_open_appointment(appointment_id):
         flash("This patient is not assigned to your doctor account.", "danger")
         return redirect(url_for("doctor"))
-    history_fields = ["visit_id", "date", "doctor", "symptoms", "diagnosis", "prescription"]
     if request.method == "POST":
         output = run_backend(
             "add_diagnosis",
@@ -255,7 +271,7 @@ def diagnosis(appointment_id, patient_id):
         "diagnosis.html",
         appointment_id=appointment_id,
         patient_id=patient_id,
-        history=rows("history", history_fields, patient_id),
+        history=rows("history", HISTORY_FIELDS, patient_id),
     )
 
 

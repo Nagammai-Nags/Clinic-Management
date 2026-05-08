@@ -17,7 +17,7 @@
     <thead>
       <tr>
         <th>ID</th><th>Name</th><th>Age</th><th>Phone</th><th>Blood</th>
-        <th>Problem</th><th>Assigned Doctor</th><th>Status</th><th>Assign / Change Doctor</th>
+        <th>Problem</th><th>Assigned Doctor</th><th>Status</th><th>History</th><th>Assign / Change Doctor</th>
       </tr>
     </thead>
     <tbody>
@@ -34,6 +34,12 @@
           <div class="small text-muted">{{ patient.specialization }}</div>
         </td>
         <td><span class="badge status-badge">{{ patient.status }}</span></td>
+        <td>
+          {% set patient_history = histories.get(patient.id, []) %}
+          <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#historyPatient{{ patient.id }}">
+            View{% if patient_history %} ({{ patient_history|length }}){% endif %}
+          </button>
+        </td>
         <td>
           <form method="post" action="{{ url_for('assign') }}" class="assign-form">
             <input type="hidden" name="patient_id" value="{{ patient.id }}">
@@ -52,4 +58,10 @@
     </tbody>
   </table>
 </div>
+
+{% for patient in patients %}
+  {% set modal_id = 'historyPatient' ~ patient.id %}
+  {% set history = histories.get(patient.id, []) %}
+  {% include "_patient_history_modal.html" %}
+{% endfor %}
 {% endblock %}

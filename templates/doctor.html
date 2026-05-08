@@ -23,7 +23,7 @@
 
 <div class="table-responsive">
   <table class="table table-hover align-middle">
-    <thead><tr><th>Appt ID</th><th>Patient</th><th>Doctor</th><th>Problem</th><th>Status</th><th>Date</th><th>Action</th></tr></thead>
+    <thead><tr><th>Appt ID</th><th>Patient</th><th>Doctor</th><th>Problem</th><th>Status</th><th>Date</th><th>History</th><th>Action</th></tr></thead>
     <tbody>
       {% for item in queue %}
       <tr>
@@ -33,6 +33,16 @@
         <td>{{ item.problem }}</td>
         <td><span class="badge status-badge">{{ item.status }}</span></td>
         <td>{{ item.date }}</td>
+        <td>
+          {% if item.patient %}
+          {% set patient_history = histories.get(item.patient_id, []) %}
+          <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#historyQueue{{ item.patient_id }}">
+            View{% if patient_history %} ({{ patient_history|length }}){% endif %}
+          </button>
+          {% else %}
+          <span class="text-muted">-</span>
+          {% endif %}
+        </td>
         <td class="d-flex gap-2">
           <a class="btn btn-sm btn-outline-primary" href="{{ url_for('start_consult', appointment_id=item.appointment_id) }}">Start</a>
           <a class="btn btn-sm btn-success" href="{{ url_for('diagnosis', appointment_id=item.appointment_id, patient_id=item.patient_id) }}">Diagnosis</a>
@@ -42,4 +52,13 @@
     </tbody>
   </table>
 </div>
+
+{% for item in queue %}
+  {% if item.patient %}
+    {% set patient = item.patient %}
+    {% set modal_id = 'historyQueue' ~ item.patient_id %}
+    {% set history = histories.get(item.patient_id, []) %}
+    {% include "_patient_history_modal.html" %}
+  {% endif %}
+{% endfor %}
 {% endblock %}
