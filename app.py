@@ -1,7 +1,8 @@
 import os
 import shutil
 import subprocess
-from datetime import date, datetime
+from collections import defaultdict
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 from flask import Flask, flash, redirect, render_template, request, session, url_for
@@ -94,6 +95,26 @@ def patient_histories(patient_ids):
     return {str(patient_id): rows("history", HISTORY_FIELDS, patient_id) for patient_id in patient_ids}
 
 
+def appointment_date_label(appointment_date):
+    today = date.today()
+    tomorrow = today + timedelta(days=1)
+    if appointment_date == today.isoformat():
+        return f"Today - {appointment_date}"
+    if appointment_date == tomorrow.isoformat():
+        return f"Tomorrow - {appointment_date}"
+    return appointment_date or "No Date"
+
+
+def group_patients_by_date(patient_list):
+    groups = defaultdict(list)
+    for patient in patient_list:
+        groups[patient.get("appointment_date") or "No Date"].append(patient)
+    return [
+        {"date": appointment_date, "label": appointment_date_label(appointment_date), "patients": groups[appointment_date]}
+        for appointment_date in sorted(groups)
+    ]
+
+
 def require_login(*allowed):
     role = session.get("role")
     if not role:
@@ -102,6 +123,16 @@ def require_login(*allowed):
         return None
     flash("You do not have permission to open that page.", "danger")
     return redirect(url_for("dashboard"))
+
+
+def require_staff_action(*allowed):
+    guard = require_login(*allowed)
+    if guard:
+        return guard
+    if session.get("role") == "owner":
+        flash("Owner access is view-only for this panel.", "danger")
+        return redirect(url_for("dashboard"))
+    return None
 
 
 def can_open_appointment(appointment_id):
@@ -188,13 +219,14 @@ def patients():
         return guard
     patient_fields = [
         "id", "name", "age", "gender", "phone", "address", "blood",
-        "problem", "doctor", "specialization", "status", "appointment_id",
+        "problem", "doctor", "specialization", "status", "appointment_id", "appointment_date",
     ]
     doctor_fields = ["id", "name", "specialization", "available", "fee"]
     patient_list = rows("list_patients", patient_fields)
     return render_template(
         "patients.html",
         patients=patient_list,
+        patient_groups=group_patients_by_date(patient_list),
         doctors=rows("list_doctors", doctor_fields),
         histories=patient_histories(patient["id"] for patient in patient_list),
     )
@@ -202,7 +234,7 @@ def patients():
 
 @app.route("/patients/add", methods=["GET", "POST"])
 def add_patient():
-    guard = require_login("reception")
+    guard = require_staff_action("reception")
     if guard:
         return guard
     if request.method == "POST":
@@ -214,18 +246,29 @@ def add_patient():
             request.form["phone"],
             request.form["address"],
             request.form["blood"],
+            request.form["appointment_date"],
         )
         flash(output.replace("|", " - "), "success")
         return redirect(url_for("patients"))
-    return render_template("add_patient.html")
+    return render_template("add_patient.html", today=date.today().isoformat())
 
 
 @app.route("/assign", methods=["POST"])
 def assign():
-    guard = require_login("reception")
+    guard = require_staff_action("reception")
     if guard:
         return guard
     output = run_backend("assign", request.form["patient_id"], request.form["doctor_id"], request.form["problem"])
+    flash(output.replace("|", " - "), "success")
+    return redirect(url_for("patients"))
+
+
+@app.route("/appointment/date", methods=["POST"])
+def change_appointment_date():
+    guard = require_staff_action("reception")
+    if guard:
+        return guard
+    output = run_backend("change_date", request.form["appointment_id"], request.form["appointment_date"])
     flash(output.replace("|", " - "), "success")
     return redirect(url_for("patients"))
 
@@ -243,7 +286,7 @@ def doctor():
     queue_fields = ["appointment_id", "patient_id", "patient_name", "doctor", "problem", "status", "date"]
     patient_fields = [
         "id", "name", "age", "gender", "phone", "address", "blood",
-        "problem", "doctor", "specialization", "status", "appointment_id",
+        "problem", "doctor", "specialization", "status", "appointment_id", "appointment_date",
     ]
     queue = rows("queue", queue_fields, selected)
     patient_lookup = {patient["id"]: patient for patient in rows("list_patients", patient_fields)}
@@ -260,7 +303,7 @@ def doctor():
 
 @app.route("/doctor/start/<appointment_id>")
 def start_consult(appointment_id):
-    guard = require_login("doctor")
+    guard = require_staff_action("doctor")
     if guard:
         return guard
     if not can_open_appointment(appointment_id):
@@ -272,7 +315,7 @@ def start_consult(appointment_id):
 
 @app.route("/diagnosis/<appointment_id>/<patient_id>", methods=["GET", "POST"])
 def diagnosis(appointment_id, patient_id):
-    guard = require_login("doctor")
+    guard = require_staff_action("doctor")
     if guard:
         return guard
     if not can_open_appointment(appointment_id):

@@ -23,10 +23,12 @@ int main(int argc, char *argv[]) {
         print_patient_list();
     } else if (strcmp(cmd, "list_doctors") == 0) {
         print_doctors();
-    } else if (strcmp(cmd, "add_patient") == 0 && argc >= 8) {
-        return add_patient_record(argv[2], argv[3], argv[4], argv[5], argv[6], argv[7]);
+    } else if (strcmp(cmd, "add_patient") == 0 && argc >= 9) {
+        return add_patient_record(argv[2], argv[3], argv[4], argv[5], argv[6], argv[7], argv[8]);
     } else if (strcmp(cmd, "assign") == 0 && argc >= 5) {
         return assign_patient_to_doctor(argv[2], argv[3], argv[4]);
+    } else if (strcmp(cmd, "change_date") == 0 && argc >= 4) {
+        return change_appointment_date(argv[2], argv[3]);
     } else if (strcmp(cmd, "queue") == 0) {
         int doctorId = argc >= 3 ? atoi(argv[2]) : 0;
         print_queue(doctorId);
