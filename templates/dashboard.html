@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 class="mb-1">Dashboard</h2>
+    <div class="text-muted">
+      Logged in as {{ current_role }}{% if current_doctor %} - {{ current_doctor }}{% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-2"><div class="metric"><span>Patients</span><strong>{{ stats.patients }}</strong></div></div>
+  <div class="col-md-2"><div class="metric"><span>Appointments</span><strong>{{ stats.appointments }}</strong></div></div>
+  <div class="col-md-2"><div class="metric"><span>Invoices</span><strong>{{ stats.invoices }}</strong></div></div>
+  <div class="col-md-2"><div class="metric"><span>Pending Bills</span><strong>{{ stats.pending }}</strong></div></div>
+  <div class="col-md-2"><div class="metric"><span>Total</span><strong>Rs. {{ stats.total }}</strong></div></div>
+  <div class="col-md-2"><div class="metric"><span>Collected</span><strong>Rs. {{ stats.paid }}</strong></div></div>
+</div>
+
+<div class="row g-3">
+  {% if current_role in ['reception', 'owner'] %}
+  <div class="col-md-4"><a class="module-link" href="{{ url_for('patients') }}">Receptionist Panel</a></div>
+  {% endif %}
+  {% if current_role in ['doctor', 'owner'] %}
+  <div class="col-md-4"><a class="module-link" href="{{ url_for('doctor') }}">Doctor Panel</a></div>
+  {% endif %}
+  {% if current_role in ['billing', 'owner'] %}
+  <div class="col-md-4"><a class="module-link" href="{{ url_for('billing') }}">Billing Panel</a></div>
+  {% endif %}
+</div>
+{% endblock %}

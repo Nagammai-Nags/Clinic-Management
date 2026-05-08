@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h2 class="mb-1">Doctor Queue</h2>
+    <div class="text-muted">
+      Start consultation, view history, and add diagnosis.
+      {% if current_doctor %}Showing only patients assigned to {{ current_doctor }}.{% endif %}
+    </div>
+  </div>
+  {% if current_role == 'owner' %}
+  <form method="get" class="d-flex gap-2">
+    <select class="form-select" name="doctor_id">
+      <option value="0">All doctors</option>
+      {% for doctor in doctors %}
+      <option value="{{ doctor.id }}" {% if selected == doctor.id %}selected{% endif %}>{{ doctor.name }}</option>
+      {% endfor %}
+    </select>
+    <button class="btn btn-outline-primary">View</button>
+  </form>
+  {% endif %}
+</div>
+
+<div class="table-responsive">
+  <table class="table table-hover align-middle">
+    <thead><tr><th>Appt ID</th><th>Patient</th><th>Doctor</th><th>Problem</th><th>Status</th><th>Date</th><th>Action</th></tr></thead>
+    <tbody>
+      {% for item in queue %}
+      <tr>
+        <td>{{ item.appointment_id }}</td>
+        <td>{{ item.patient_name }} <span class="text-muted">#{{ item.patient_id }}</span></td>
+        <td>{{ item.doctor }}</td>
+        <td>{{ item.problem }}</td>
+        <td><span class="badge status-badge">{{ item.status }}</span></td>
+        <td>{{ item.date }}</td>
+        <td class="d-flex gap-2">
+          <a class="btn btn-sm btn-outline-primary" href="{{ url_for('start_consult', appointment_id=item.appointment_id) }}">Start</a>
+          <a class="btn btn-sm btn-success" href="{{ url_for('diagnosis', appointment_id=item.appointment_id, patient_id=item.patient_id) }}">Diagnosis</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
