@@ -3,7 +3,7 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
   <div>
     <h2 class="mb-1">Receptionist - Patient List</h2>
-    <div class="text-muted">Displays every patient with assigned doctor and queue status.</div>
+    <div class="text-muted">Displays active appointments grouped by appointment date.</div>
   </div>
   {% if current_role != 'owner' %}
   <a class="btn btn-primary" href="{{ url_for('add_patient') }}">Add Patient</a>
@@ -14,54 +14,76 @@
   <input class="form-control" id="patientSearch" placeholder="Search by patient, phone, doctor, problem, or status">
 </div>
 
-<div class="table-responsive">
-  <table class="table align-middle table-hover" id="patientTable">
-    <thead>
-      <tr>
-        <th>ID</th><th>Name</th><th>Age</th><th>Phone</th><th>Blood</th>
-        <th>Problem</th><th>Assigned Doctor</th><th>Status</th><th>History</th>
-        {% if current_role != 'owner' %}<th>Assign / Change Doctor</th>{% endif %}
-      </tr>
-    </thead>
-    <tbody>
-      {% for patient in patients %}
-      <tr>
-        <td>{{ patient.id }}</td>
-        <td>{{ patient.name }}</td>
-        <td>{{ patient.age }}</td>
-        <td>{{ patient.phone }}</td>
-        <td>{{ patient.blood }}</td>
-        <td>{{ patient.problem }}</td>
-        <td>
-          <strong>{{ patient.doctor }}</strong>
-          <div class="small text-muted">{{ patient.specialization }}</div>
-        </td>
-        <td><span class="badge status-badge">{{ patient.status }}</span></td>
-        <td>
-          {% set patient_history = histories.get(patient.id, []) %}
-          <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#historyPatient{{ patient.id }}">
-            View{% if patient_history %} ({{ patient_history|length }}){% endif %}
-          </button>
-        </td>
-        {% if current_role != 'owner' %}
-        <td>
-          <form method="post" action="{{ url_for('assign') }}" class="assign-form">
-            <input type="hidden" name="patient_id" value="{{ patient.id }}">
-            <input class="form-control form-control-sm" name="problem" placeholder="Problem type" required>
-            <select class="form-select form-select-sm" name="doctor_id" required>
-              <option value="">Doctor</option>
-              {% for doctor in doctors %}
-              <option value="{{ doctor.id }}">{{ doctor.name }} - {{ doctor.specialization }}</option>
-              {% endfor %}
-            </select>
-            <button class="btn btn-sm btn-success">Assign</button>
-          </form>
-        </td>
-        {% endif %}
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<div id="patientTable">
+  {% if patient_groups %}
+    {% for group in patient_groups %}
+    <section class="appointment-day mb-4">
+      <h5 class="mb-2">{{ group.label }}</h5>
+      <div class="table-responsive">
+        <table class="table align-middle table-hover">
+          <thead>
+            <tr>
+              <th>ID</th><th>Name</th><th>Age</th><th>Phone</th><th>Blood</th>
+              <th>Problem</th><th>Assigned Doctor</th><th>Status</th><th>Date</th><th>History</th>
+              {% if current_role != 'owner' %}<th>Assign / Change Doctor</th>{% endif %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for patient in group.patients %}
+            <tr>
+              <td>{{ patient.id }}</td>
+              <td>{{ patient.name }}</td>
+              <td>{{ patient.age }}</td>
+              <td>{{ patient.phone }}</td>
+              <td>{{ patient.blood }}</td>
+              <td>{{ patient.problem }}</td>
+              <td>
+                <strong>{{ patient.doctor }}</strong>
+                <div class="small text-muted">{{ patient.specialization }}</div>
+              </td>
+              <td><span class="badge status-badge">{{ patient.status }}</span></td>
+              <td>
+                {% if current_role == 'owner' %}
+                {{ patient.appointment_date or '-' }}
+                {% else %}
+                <form method="post" action="{{ url_for('change_appointment_date') }}" class="date-form">
+                  <input type="hidden" name="appointment_id" value="{{ patient.appointment_id }}">
+                  <input type="date" class="form-control form-control-sm" name="appointment_date" value="{{ patient.appointment_date }}" required>
+                  <button class="btn btn-sm btn-outline-primary">Change</button>
+                </form>
+                {% endif %}
+              </td>
+              <td>
+                {% set patient_history = histories.get(patient.id, []) %}
+                <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#historyPatient{{ patient.id }}">
+                  View{% if patient_history %} ({{ patient_history|length }}){% endif %}
+                </button>
+              </td>
+              {% if current_role != 'owner' %}
+              <td>
+                <form method="post" action="{{ url_for('assign') }}" class="assign-form">
+                  <input type="hidden" name="patient_id" value="{{ patient.id }}">
+                  <input class="form-control form-control-sm" name="problem" placeholder="Problem type" value="{% if patient.problem != 'Not Assigned' and patient.problem != 'New Visit' %}{{ patient.problem }}{% endif %}" required>
+                  <select class="form-select form-select-sm" name="doctor_id" required>
+                    <option value="">Doctor</option>
+                    {% for doctor in doctors %}
+                    <option value="{{ doctor.id }}">{{ doctor.name }} - {{ doctor.specialization }}</option>
+                    {% endfor %}
+                  </select>
+                  <button class="btn btn-sm btn-success">Assign</button>
+                </form>
+              </td>
+              {% endif %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+    {% endfor %}
+  {% else %}
+    <div class="empty-state">No active appointments.</div>
+  {% endif %}
 </div>
 
 {% for patient in patients %}

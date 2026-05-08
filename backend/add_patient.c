@@ -4,7 +4,8 @@ int add_patient_record(
     char *gender,
     char *phone,
     char *address,
-    char *blood
+    char *blood,
+    char *appointmentDate
 ) {
     /*
         Diagnosis history is connected to patient id.
@@ -22,7 +23,8 @@ int add_patient_record(
             newVisit->doctorId = 0;
             strcpy(newVisit->problem, "New Visit");
             strcpy(newVisit->status, "Not Assigned");
-            today(newVisit->date);
+            strncpy(newVisit->date, appointmentDate, 19);
+            clean(newVisit->date);
             append_appointment(newVisit);
             save_all();
         }
@@ -69,10 +71,25 @@ int add_patient_record(
         Step 5: Add the patient to the linked list and save all records.
     */
     append_patient(newPatient);
+
+    /*
+        Step 6: Create a reception appointment entry for the selected date.
+        Doctor is 0 until the receptionist assigns the correct doctor.
+    */
+    Appointment *newVisit = calloc(1, sizeof(Appointment));
+    newVisit->id = next_appointment_id();
+    newVisit->patientId = newPatient->id;
+    newVisit->doctorId = 0;
+    strcpy(newVisit->problem, "Not Assigned");
+    strcpy(newVisit->status, "Not Assigned");
+    strncpy(newVisit->date, appointmentDate, 19);
+    clean(newVisit->date);
+    append_appointment(newVisit);
+
     save_all();
 
     /*
-        Step 6: Send success message back to the Python/Flask application.
+        Step 7: Send success message back to the Python/Flask application.
     */
     printf("OK|Patient added|%d\n", newPatient->id);
 
