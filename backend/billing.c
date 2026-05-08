@@ -3,8 +3,8 @@ void print_invoices() {
     while (i) {
         Patient *p = find_patient(i->patientId);
         Doctor *d = find_doctor(i->doctorId);
-        printf("%d|%d|%s|%s|%.2f|%.2f|%.2f|%.2f|%.2f|%s|%s|%s\n",
-            i->id, i->patientId, p ? p->name : "-", d ? d->name : "-",
+        printf("%d|%d|%s|%s|%s|%.2f|%.2f|%.2f|%.2f|%.2f|%s|%s|%s\n",
+            i->id, i->patientId, p ? p->name : "-", p ? p->phone : "-", d ? d->name : "-",
             i->consultationFee, i->medicineFee, i->labFee, i->total, i->paidAmount,
             i->status, i->method, i->date);
         i = i->next;

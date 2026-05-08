@@ -7,8 +7,12 @@
   </div>
 </div>
 
+<div class="toolbar mb-3">
+  <input class="form-control" id="billingSearch" placeholder="Search by patient name or phone number">
+</div>
+
 <div class="table-responsive">
-  <table class="table table-hover align-middle">
+  <table class="table table-hover align-middle" id="billingTable">
     <thead>
       <tr>
         <th>Invoice</th><th>Patient</th><th>Doctor</th><th>Consultation</th><th>Medicine</th>
@@ -19,7 +23,10 @@
       {% for invoice in invoices %}
       <tr>
         <td>#{{ invoice.invoice_id }}<div class="small text-muted">{{ invoice.date }}</div></td>
-        <td>{{ invoice.patient_name }} <span class="text-muted">#{{ invoice.patient_id }}</span></td>
+        <td>
+          {{ invoice.patient_name }} <span class="text-muted">#{{ invoice.patient_id }}</span>
+          <div class="small text-muted">{{ invoice.patient_phone }}</div>
+        </td>
         <td>{{ invoice.doctor }}</td>
         <td>Rs. {{ invoice.consultation }}</td>
         <td>Rs. {{ invoice.medicine }}</td>
