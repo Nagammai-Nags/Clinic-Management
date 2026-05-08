@@ -103,6 +103,16 @@ def require_login(*allowed):
     return redirect(url_for("dashboard"))
 
 
+def require_staff_action(*allowed):
+    guard = require_login(*allowed)
+    if guard:
+        return guard
+    if session.get("role") == "owner":
+        flash("Owner access is view-only for this panel.", "danger")
+        return redirect(url_for("dashboard"))
+    return None
+
+
 def can_open_appointment(appointment_id):
     if session.get("role") == "owner":
         return True
@@ -177,7 +187,7 @@ def patients():
 
 @app.route("/patients/add", methods=["GET", "POST"])
 def add_patient():
-    guard = require_login("reception")
+    guard = require_staff_action("reception")
     if guard:
         return guard
     if request.method == "POST":
@@ -197,7 +207,7 @@ def add_patient():
 
 @app.route("/assign", methods=["POST"])
 def assign():
-    guard = require_login("reception")
+    guard = require_staff_action("reception")
     if guard:
         return guard
     output = run_backend("assign", request.form["patient_id"], request.form["doctor_id"], request.form["problem"])
@@ -235,7 +245,7 @@ def doctor():
 
 @app.route("/doctor/start/<appointment_id>")
 def start_consult(appointment_id):
-    guard = require_login("doctor")
+    guard = require_staff_action("doctor")
     if guard:
         return guard
     if not can_open_appointment(appointment_id):
@@ -247,7 +257,7 @@ def start_consult(appointment_id):
 
 @app.route("/diagnosis/<appointment_id>/<patient_id>", methods=["GET", "POST"])
 def diagnosis(appointment_id, patient_id):
-    guard = require_login("doctor")
+    guard = require_staff_action("doctor")
     if guard:
         return guard
     if not can_open_appointment(appointment_id):

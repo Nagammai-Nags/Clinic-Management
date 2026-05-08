@@ -5,7 +5,9 @@
     <h2 class="mb-1">Receptionist - Patient List</h2>
     <div class="text-muted">Displays every patient with assigned doctor and queue status.</div>
   </div>
+  {% if current_role != 'owner' %}
   <a class="btn btn-primary" href="{{ url_for('add_patient') }}">Add Patient</a>
+  {% endif %}
 </div>
 
 <div class="toolbar mb-3">
@@ -17,7 +19,8 @@
     <thead>
       <tr>
         <th>ID</th><th>Name</th><th>Age</th><th>Phone</th><th>Blood</th>
-        <th>Problem</th><th>Assigned Doctor</th><th>Status</th><th>History</th><th>Assign / Change Doctor</th>
+        <th>Problem</th><th>Assigned Doctor</th><th>Status</th><th>History</th>
+        {% if current_role != 'owner' %}<th>Assign / Change Doctor</th>{% endif %}
       </tr>
     </thead>
     <tbody>
@@ -40,6 +43,7 @@
             View{% if patient_history %} ({{ patient_history|length }}){% endif %}
           </button>
         </td>
+        {% if current_role != 'owner' %}
         <td>
           <form method="post" action="{{ url_for('assign') }}" class="assign-form">
             <input type="hidden" name="patient_id" value="{{ patient.id }}">
@@ -53,6 +57,7 @@
             <button class="btn btn-sm btn-success">Assign</button>
           </form>
         </td>
+        {% endif %}
       </tr>
       {% endfor %}
     </tbody>
