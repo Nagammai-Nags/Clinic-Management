@@ -17,8 +17,6 @@ USERS = {
     "doctor": {"password": "doc123", "role": "doctor", "doctor_id": "1", "doctor_name": "Dr. Varun"},
     "doctor2": {"password": "doc123", "role": "doctor", "doctor_id": "2", "doctor_name": "Dr. Tharun"},
     "doctor3": {"password": "doc123", "role": "doctor", "doctor_id": "3", "doctor_name": "Dr. Renita"},
-    "doctor4": {"password": "doc123", "role": "doctor", "doctor_id": "4", "doctor_name": "Dr. Jimin"},
-    "doctor5": {"password": "doc123", "role": "doctor", "doctor_id": "5", "doctor_name": "Dr. Jin"},
     "billing": {"password": "bill123", "role": "billing"},
     "owner": {"password": "owner123", "role": "owner"},
 }
