@@ -4,7 +4,7 @@ body {
 }
 
 .login-shell {
-  min-height: calc(100vh - 100px);
+  min-height: calc(100vh - 48px);
   display: grid;
   place-items: center;
 }
