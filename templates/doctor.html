@@ -4,8 +4,12 @@
   <div>
     <h2 class="mb-1">Doctor Queue</h2>
     <div class="text-muted">
+      {% if current_role == 'owner' %}
+      View patient queue and history.
+      {% else %}
       Start consultation, view history, and add diagnosis.
       {% if current_doctor %}Showing only patients assigned to {{ current_doctor }}.{% endif %}
+      {% endif %}
     </div>
   </div>
   {% if current_role == 'owner' %}
@@ -23,7 +27,12 @@
 
 <div class="table-responsive">
   <table class="table table-hover align-middle">
-    <thead><tr><th>Appt ID</th><th>Patient</th><th>Doctor</th><th>Problem</th><th>Status</th><th>Date</th><th>History</th><th>Action</th></tr></thead>
+    <thead>
+      <tr>
+        <th>Appt ID</th><th>Patient</th><th>Doctor</th><th>Problem</th><th>Status</th><th>Date</th><th>History</th>
+        {% if current_role != 'owner' %}<th>Action</th>{% endif %}
+      </tr>
+    </thead>
     <tbody>
       {% for item in queue %}
       <tr>
@@ -43,10 +52,12 @@
           <span class="text-muted">-</span>
           {% endif %}
         </td>
-        <td class="d-flex gap-2">
-          <a class="btn btn-sm btn-outline-primary" href="{{ url_for('start_consult', appointment_id=item.appointment_id) }}">Start</a>
-          <a class="btn btn-sm btn-success" href="{{ url_for('diagnosis', appointment_id=item.appointment_id, patient_id=item.patient_id) }}">Diagnosis</a>
-        </td>
+        {% if current_role != 'owner' %}
+          <td class="d-flex gap-2">
+            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('start_consult', appointment_id=item.appointment_id) }}">Start</a>
+            <a class="btn btn-sm btn-success" href="{{ url_for('diagnosis', appointment_id=item.appointment_id, patient_id=item.patient_id) }}">Diagnosis</a>
+          </td>
+        {% endif %}
       </tr>
       {% endfor %}
     </tbody>

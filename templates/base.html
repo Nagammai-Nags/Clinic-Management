@@ -20,7 +20,7 @@
         {% if current_role in ['doctor', 'owner'] %}
         <a class="nav-link" href="{{ url_for('doctor') }}">Doctor</a>
         {% endif %}
-        {% if current_role in ['billing', 'owner'] %}
+        {% if current_role in ['reception', 'billing', 'owner'] %}
         <a class="nav-link" href="{{ url_for('billing') }}">Billing</a>
         {% endif %}
         <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
