@@ -14,7 +14,20 @@ int add_patient_record(
     clean(phone);
     Patient *existingPatient = find_patient_by_phone(phone);
     if (existingPatient) {
-        printf("OK|Existing patient found|%d\n", existingPatient->id);
+        Appointment *activeAppointment = current_appointment_for_patient(existingPatient->id);
+        if (!activeAppointment) {
+            Appointment *newVisit = calloc(1, sizeof(Appointment));
+            newVisit->id = next_appointment_id();
+            newVisit->patientId = existingPatient->id;
+            newVisit->doctorId = 0;
+            strcpy(newVisit->problem, "New Visit");
+            strcpy(newVisit->status, "Not Assigned");
+            today(newVisit->date);
+            append_appointment(newVisit);
+            save_all();
+        }
+
+        printf("OK|Existing patient found for new visit|%d\n", existingPatient->id);
         return 0;
     }
 

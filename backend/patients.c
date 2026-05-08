@@ -7,6 +7,11 @@ void print_patient_list() {
             so a paid patient was wrongly displayed as "Not Assigned".
         */
         Appointment *a = latest_appointment_for_patient(p->id);
+        if (a && strcmp(a->status, "Completed") == 0) {
+            p = p->next;
+            continue;
+        }
+
         Doctor *d = a ? find_doctor(a->doctorId) : NULL;
         printf("%d|%s|%d|%s|%s|%s|%s|%s|%s|%s|%s|%d\n",
             p->id, p->name, p->age, p->gender, p->phone, p->address, p->blood,

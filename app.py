@@ -275,19 +275,22 @@ def diagnosis(appointment_id, patient_id):
 
 @app.route("/billing")
 def billing():
-    guard = require_login("billing")
+    guard = require_login("reception", "billing")
     if guard:
         return guard
     invoice_fields = [
         "invoice_id", "patient_id", "patient_name", "patient_phone", "doctor", "consultation",
         "medicine", "lab", "total", "paid", "status", "method", "date",
     ]
-    return render_template("billing.html", invoices=rows("billing", invoice_fields))
+    invoices = rows("billing", invoice_fields)
+    if session.get("role") == "reception":
+        invoices = [invoice for invoice in invoices if invoice["status"] != "Paid"]
+    return render_template("billing.html", invoices=invoices)
 
 
 @app.route("/billing/pay", methods=["POST"])
 def pay():
-    guard = require_login("billing")
+    guard = require_login("reception", "billing")
     if guard:
         return guard
     output = run_backend(
