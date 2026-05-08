@@ -2,6 +2,18 @@ const patientSearch = document.getElementById("patientSearch");
 const patientTable = document.getElementById("patientTable");
 const billingSearch = document.getElementById("billingSearch");
 const billingTable = document.getElementById("billingTable");
+const appShell = document.querySelector(".app-shell");
+const sidebar = document.querySelector(".sidebar");
+const sidebarBrand = document.querySelector(".brand");
+
+if (appShell && sidebar && sidebarBrand) {
+  const openSidebar = () => appShell.classList.add("sidebar-open");
+  const closeSidebar = () => appShell.classList.remove("sidebar-open");
+
+  sidebarBrand.addEventListener("mouseenter", openSidebar);
+  sidebarBrand.addEventListener("focus", openSidebar);
+  sidebar.addEventListener("mouseleave", closeSidebar);
+}
 
 if (patientSearch && patientTable) {
   patientSearch.addEventListener("input", () => {

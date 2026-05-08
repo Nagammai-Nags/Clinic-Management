@@ -10,12 +10,12 @@
 </div>
 
 <div class="row g-3 mb-4">
-  <div class="col-md-2"><div class="metric"><span>Patients</span><strong>{{ stats.patients }}</strong></div></div>
-  <div class="col-md-2"><div class="metric"><span>Appointments</span><strong>{{ stats.appointments }}</strong></div></div>
-  <div class="col-md-2"><div class="metric"><span>Invoices</span><strong>{{ stats.invoices }}</strong></div></div>
-  <div class="col-md-2"><div class="metric"><span>Pending Bills</span><strong>{{ stats.pending }}</strong></div></div>
-  <div class="col-md-2"><div class="metric"><span>Total</span><strong>Rs. {{ stats.total }}</strong></div></div>
-  <div class="col-md-2"><div class="metric"><span>Collected</span><strong>Rs. {{ stats.paid }}</strong></div></div>
+  <div class="col-xl-2 col-lg-4 col-sm-6"><div class="metric"><div class="metric-icon">P</div><span>Patients</span><strong>{{ stats.patients }}</strong></div></div>
+  <div class="col-xl-2 col-lg-4 col-sm-6"><div class="metric"><div class="metric-icon">A</div><span>Appointments</span><strong>{{ stats.appointments }}</strong></div></div>
+  <div class="col-xl-2 col-lg-4 col-sm-6"><div class="metric"><div class="metric-icon">I</div><span>Invoices</span><strong>{{ stats.invoices }}</strong></div></div>
+  <div class="col-xl-2 col-lg-4 col-sm-6"><div class="metric"><div class="metric-icon">B</div><span>Pending Bills</span><strong>{{ stats.pending }}</strong></div></div>
+  <div class="col-xl-2 col-lg-4 col-sm-6"><div class="metric metric-money"><div class="metric-icon">T</div><span>Total</span><strong>Rs. {{ stats.total }}</strong></div></div>
+  <div class="col-xl-2 col-lg-4 col-sm-6"><div class="metric metric-money"><div class="metric-icon">C</div><span>Collected</span><strong>Rs. {{ stats.paid }}</strong></div></div>
 </div>
 
 {% if current_role == 'owner' %}
