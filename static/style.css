@@ -61,6 +61,12 @@ body {
   grid-template-columns: 100px 95px 85px auto;
 }
 
+.date-form {
+  display: grid;
+  grid-template-columns: 145px auto;
+  gap: 8px;
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -134,7 +140,7 @@ body {
 }
 
 @media (max-width: 900px) {
-  .assign-form, .pay-form, .form-grid, .patient-summary {
+  .assign-form, .pay-form, .date-form, .form-grid, .patient-summary {
     grid-template-columns: 1fr;
   }
 }
