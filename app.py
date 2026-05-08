@@ -281,7 +281,7 @@ def billing():
     if guard:
         return guard
     invoice_fields = [
-        "invoice_id", "patient_id", "patient_name", "doctor", "consultation",
+        "invoice_id", "patient_id", "patient_name", "patient_phone", "doctor", "consultation",
         "medicine", "lab", "total", "paid", "status", "method", "date",
     ]
     return render_template("billing.html", invoices=rows("billing", invoice_fields))
