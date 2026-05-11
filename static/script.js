@@ -5,6 +5,7 @@ const billingTable = document.getElementById("billingTable");
 const appShell = document.querySelector(".app-shell");
 const sidebar = document.querySelector(".sidebar");
 const sidebarBrand = document.querySelector(".brand");
+const appointmentForm = document.querySelector(".appointment-form");
 
 if (appShell && sidebar && sidebarBrand) {
   const openSidebar = () => appShell.classList.add("sidebar-open");
@@ -32,6 +33,105 @@ if (billingSearch && billingTable) {
       row.style.display = patientCell.includes(value) ? "" : "none";
     });
   });
+}
+
+if (appointmentForm) {
+  const doctorSelect = appointmentForm.querySelector("[name='doctor_id']");
+  const dateInput = appointmentForm.querySelector("[name='appointment_date']");
+  const timeInput = appointmentForm.querySelector("[name='appointment_time']");
+  const submitButton = appointmentForm.querySelector("button[type='submit'], button:not([type])");
+  const note = document.getElementById("doctorAvailability");
+  const schedule = JSON.parse(appointmentForm.dataset.schedule || "[]");
+  const openMinute = 10 * 60;
+  const closeMinute = 21 * 60;
+  const slotMinutes = 15;
+
+  const formatMinute = (value) => {
+    const hour = Math.floor(value / 60);
+    const minute = value % 60;
+    return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+  };
+
+  const formatMinute12h = (value) => {
+    const hour = Math.floor(value / 60);
+    const minute = value % 60;
+    const period = hour >= 12 ? "PM" : "AM";
+    const hour12 = hour % 12 || 12;
+    return `${String(hour12).padStart(2, "0")}:${String(minute).padStart(2, "0")} ${period}`;
+  };
+
+  const parseTime = (value) => {
+    const match = /^(\d{2}):(\d{2})$/.exec(value);
+    if (!match) return null;
+    return Number(match[1]) * 60 + Number(match[2]);
+  };
+
+  const slotSuggestion = (value) => {
+    const total = parseTime(value);
+    if (total === null) return null;
+    const clamped = Math.min(Math.max(total, openMinute), closeMinute);
+    const previous = Math.floor(clamped / slotMinutes) * slotMinutes;
+    const next = Math.min(Math.ceil(clamped / slotMinutes) * slotMinutes, closeMinute);
+    return previous === next ? formatMinute12h(previous) : `${formatMinute12h(previous)} or ${formatMinute12h(next)}`;
+  };
+
+  const validSlot = (value) => {
+    const total = parseTime(value);
+    return total !== null && total >= openMinute && total <= closeMinute && total % slotMinutes === 0;
+  };
+
+  const updateAvailability = () => {
+    const option = doctorSelect.selectedOptions[0];
+    const doctorId = doctorSelect.value;
+    const dateValue = dateInput.value;
+    const timeValue = timeInput.value;
+
+    note.classList.remove("availability-note--ok", "availability-note--busy", "availability-note--warn");
+
+    if (!doctorId || !dateValue || !timeValue) {
+      note.textContent = "Select doctor and time to see availability.";
+      submitButton.disabled = false;
+      return;
+    }
+
+    if (!validSlot(timeValue)) {
+      const suggestion = slotSuggestion(timeValue);
+      note.classList.add("availability-note--warn");
+      note.textContent = suggestion
+        ? `Appointments take 15 minutes. Timing is 10:00 AM to 09:00 PM. Use ${suggestion}.`
+        : "Appointments take 15 minutes. Timing is 10:00 AM to 09:00 PM.";
+      submitButton.disabled = true;
+      return;
+    }
+
+    const slot = `${dateValue} ${timeValue}`;
+    const booked = schedule.find((item) => item.doctor_id === doctorId && item.slot === slot);
+    const available = (option.dataset.available || "").toLowerCase();
+
+    if (booked) {
+      note.classList.add("availability-note--busy");
+      note.textContent = `${option.textContent.trim()} already has ${booked.patient} at ${formatMinute12h(parseTime(timeValue))}. Choose another time.`;
+      submitButton.disabled = true;
+      return;
+    }
+
+    if (available && available !== "yes") {
+      note.classList.add("availability-note--warn");
+      note.textContent = `${option.textContent.trim()} is marked as ${option.dataset.available}, but this exact time is free.`;
+      submitButton.disabled = false;
+      return;
+    }
+
+    note.classList.add("availability-note--ok");
+    note.textContent = `${option.textContent.trim()} is available at ${formatMinute12h(parseTime(timeValue))}.`;
+    submitButton.disabled = false;
+  };
+
+  doctorSelect.addEventListener("change", updateAvailability);
+  dateInput.addEventListener("change", updateAvailability);
+  timeInput.addEventListener("change", updateAvailability);
+  timeInput.addEventListener("input", updateAvailability);
+  updateAvailability();
 }
 
 const incomeChart = document.querySelector(".income-chart");

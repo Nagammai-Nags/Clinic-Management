@@ -35,6 +35,7 @@ int add_diagnosis_record(char *appointmentIdText, char *symptoms, char *diagnosi
     today(i->date);
     append_invoice(i);
 
+    remove_appointment_from_queue(a);
     strcpy(a->status, "Billing Pending");
     save_all();
     printf("OK|Diagnosis saved and invoice generated|%d\n", i->id);

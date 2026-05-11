@@ -98,20 +98,54 @@ def patient_histories(patient_ids):
 def appointment_date_label(appointment_date):
     today = date.today()
     tomorrow = today + timedelta(days=1)
-    if appointment_date == today.isoformat():
-        return f"Today - {appointment_date}"
-    if appointment_date == tomorrow.isoformat():
-        return f"Tomorrow - {appointment_date}"
-    return appointment_date or "No Date"
+    appointment_day = (appointment_date or "").split(" ", 1)[0]
+    if appointment_day == today.isoformat():
+        return f"Today - {appointment_day}"
+    if appointment_day == tomorrow.isoformat():
+        return f"Tomorrow - {appointment_day}"
+    return appointment_day or "No Date"
 
 
 def group_patients_by_date(patient_list):
     groups = defaultdict(list)
     for patient in patient_list:
-        groups[patient.get("appointment_date") or "No Date"].append(patient)
+        appointment_day = (patient.get("appointment_date") or "").split(" ", 1)[0] or "No Date"
+        groups[appointment_day].append(patient)
     return [
         {"date": appointment_date, "label": appointment_date_label(appointment_date), "patients": groups[appointment_date]}
         for appointment_date in sorted(groups)
+    ]
+
+
+def format_time_12h(time_text):
+    try:
+        return datetime.strptime(time_text, "%H:%M").strftime("%I:%M %p")
+    except ValueError:
+        return time_text
+
+
+def add_appointment_display(patient_list):
+    for patient in patient_list:
+        appointment = patient.get("appointment_date") or ""
+        parts = appointment.split(" ", 1)
+        if len(parts) == 2:
+            patient["appointment_display"] = f"{parts[0]} {format_time_12h(parts[1])}"
+        else:
+            patient["appointment_display"] = appointment
+    return patient_list
+
+
+def doctor_schedule_slots(patient_list):
+    return [
+        {
+            "doctor_id": patient.get("doctor_id") or "",
+            "doctor": patient.get("doctor") or "",
+            "slot": patient.get("appointment_date") or "",
+            "patient": patient.get("name") or "",
+            "status": patient.get("status") or "",
+        }
+        for patient in patient_list
+        if patient.get("doctor_id") and patient.get("doctor_id") != "0" and patient.get("appointment_date")
     ]
 
 
@@ -219,10 +253,10 @@ def patients():
         return guard
     patient_fields = [
         "id", "name", "age", "gender", "phone", "address", "blood",
-        "problem", "doctor", "specialization", "status", "appointment_id", "appointment_date",
+        "problem", "doctor", "specialization", "status", "appointment_id", "doctor_id", "appointment_date",
     ]
     doctor_fields = ["id", "name", "specialization", "available", "fee"]
-    patient_list = rows("list_patients", patient_fields)
+    patient_list = add_appointment_display(rows("list_patients", patient_fields))
     return render_template(
         "patients.html",
         patients=patient_list,
@@ -238,19 +272,33 @@ def add_patient():
     if guard:
         return guard
     if request.method == "POST":
+        appointment_date_time = f"{request.form['appointment_date']} {request.form['appointment_time']}"
         output = run_backend(
-            "add_patient",
+        "add_patient",
             request.form["name"],
             request.form["age"],
             request.form["gender"],
             request.form["phone"],
             request.form["address"],
             request.form["blood"],
-            request.form["appointment_date"],
+            appointment_date_time,
+            request.form["doctor_id"],
+            request.form["problem"],
         )
         flash(output.replace("|", " - "), "success")
         return redirect(url_for("patients"))
-    return render_template("add_patient.html", today=date.today().isoformat())
+    doctor_fields = ["id", "name", "specialization", "available", "fee"]
+    patient_fields = [
+        "id", "name", "age", "gender", "phone", "address", "blood",
+        "problem", "doctor", "specialization", "status", "appointment_id", "doctor_id", "appointment_date",
+    ]
+    patient_list = add_appointment_display(rows("list_patients", patient_fields))
+    return render_template(
+        "add_patient.html",
+        today=date.today().isoformat(),
+        doctors=rows("list_doctors", doctor_fields),
+        schedule_slots=doctor_schedule_slots(patient_list),
+    )
 
 
 @app.route("/assign", methods=["POST"])
@@ -268,7 +316,8 @@ def change_appointment_date():
     guard = require_staff_action("reception")
     if guard:
         return guard
-    output = run_backend("change_date", request.form["appointment_id"], request.form["appointment_date"])
+    appointment_date_time = f"{request.form['appointment_date']} {request.form['appointment_time']}"
+    output = run_backend("change_date", request.form["appointment_id"], appointment_date_time)
     flash(output.replace("|", " - "), "success")
     return redirect(url_for("patients"))
 
@@ -286,10 +335,10 @@ def doctor():
     queue_fields = ["appointment_id", "patient_id", "patient_name", "doctor", "problem", "status", "date"]
     patient_fields = [
         "id", "name", "age", "gender", "phone", "address", "blood",
-        "problem", "doctor", "specialization", "status", "appointment_id", "appointment_date",
+        "problem", "doctor", "specialization", "status", "appointment_id", "doctor_id", "appointment_date",
     ]
     queue = rows("queue", queue_fields, selected)
-    patient_lookup = {patient["id"]: patient for patient in rows("list_patients", patient_fields)}
+    patient_lookup = {patient["id"]: patient for patient in add_appointment_display(rows("list_patients", patient_fields))}
     for item in queue:
         item["patient"] = patient_lookup.get(item["patient_id"], {})
     return render_template(

@@ -5,8 +5,21 @@ int add_patient_record(
     char *phone,
     char *address,
     char *blood,
-    char *appointmentDate
+    char *appointmentDate,
+    char *doctorIdText,
+    char *problem
 ) {
+    int doctorId = atoi(doctorIdText);
+    if (!find_doctor(doctorId)) {
+        printf("ERROR|Invalid doctor\n");
+        return 1;
+    }
+
+    if (!valid_appointment_slot(appointmentDate)) {
+        printf("ERROR|Appointment time must be a 15-minute slot from 10:00 AM to 09:00 PM\n");
+        return 1;
+    }
+
     /*
         Diagnosis history is connected to patient id.
         If the same phone number comes again, we reuse the old patient id
@@ -16,21 +29,43 @@ int add_patient_record(
     Patient *existingPatient = find_patient_by_phone(phone);
     if (existingPatient) {
         Appointment *activeAppointment = current_appointment_for_patient(existingPatient->id);
+        if (!doctor_slot_available(doctorId, appointmentDate, activeAppointment)) {
+            printf("ERROR|Doctor already has another patient in this slot\n");
+            return 1;
+        }
+
         if (!activeAppointment) {
             Appointment *newVisit = calloc(1, sizeof(Appointment));
             newVisit->id = next_appointment_id();
             newVisit->patientId = existingPatient->id;
-            newVisit->doctorId = 0;
-            strcpy(newVisit->problem, "New Visit");
-            strcpy(newVisit->status, "Not Assigned");
+            newVisit->doctorId = doctorId;
+            strncpy(newVisit->problem, problem, 79);
+            clean(newVisit->problem);
+            strcpy(newVisit->status, "Waiting");
             strncpy(newVisit->date, appointmentDate, 19);
             clean(newVisit->date);
             append_appointment(newVisit);
+            enqueue_appointment(newVisit);
+            save_all();
+        } else {
+            remove_appointment_from_queue(activeAppointment);
+            activeAppointment->doctorId = doctorId;
+            strncpy(activeAppointment->problem, problem, 79);
+            clean(activeAppointment->problem);
+            strcpy(activeAppointment->status, "Waiting");
+            strncpy(activeAppointment->date, appointmentDate, 19);
+            clean(activeAppointment->date);
+            enqueue_appointment(activeAppointment);
             save_all();
         }
 
-        printf("OK|Existing patient found for new visit|%d\n", existingPatient->id);
+        printf("OK|Existing patient assigned for visit|%d\n", existingPatient->id);
         return 0;
+    }
+
+    if (!doctor_slot_available(doctorId, appointmentDate, NULL)) {
+        printf("ERROR|Doctor already has another patient in this slot\n");
+        return 1;
     }
 
     /*
@@ -73,18 +108,19 @@ int add_patient_record(
     append_patient(newPatient);
 
     /*
-        Step 6: Create a reception appointment entry for the selected date.
-        Doctor is 0 until the receptionist assigns the correct doctor.
+        Step 6: Create the appointment and immediately assign the doctor.
     */
     Appointment *newVisit = calloc(1, sizeof(Appointment));
     newVisit->id = next_appointment_id();
     newVisit->patientId = newPatient->id;
-    newVisit->doctorId = 0;
-    strcpy(newVisit->problem, "Not Assigned");
-    strcpy(newVisit->status, "Not Assigned");
+    newVisit->doctorId = doctorId;
+    strncpy(newVisit->problem, problem, 79);
+    clean(newVisit->problem);
+    strcpy(newVisit->status, "Waiting");
     strncpy(newVisit->date, appointmentDate, 19);
     clean(newVisit->date);
     append_appointment(newVisit);
+    enqueue_appointment(newVisit);
 
     save_all();
 

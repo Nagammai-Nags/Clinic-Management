@@ -25,7 +25,10 @@ int update_payment(char *invoiceIdText, char *status, char *method, char *paidAm
     i->paidAmount = (float)atof(paidAmountText);
 
     Appointment *a = find_appointment(i->appointmentId);
-    if (a && strcmp(i->status, "Paid") == 0) strcpy(a->status, "Completed");
+    if (a && strcmp(i->status, "Paid") == 0) {
+        remove_appointment_from_queue(a);
+        strcpy(a->status, "Completed");
+    }
 
     save_all();
     printf("OK|Payment updated\n");

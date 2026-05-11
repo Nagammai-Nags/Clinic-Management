@@ -24,8 +24,8 @@
           <thead>
             <tr>
               <th>ID</th><th>Name</th><th>Age</th><th>Phone</th><th>Blood</th>
-              <th>Problem</th><th>Assigned Doctor</th><th>Status</th><th>Date</th><th>History</th>
-              {% if current_role != 'owner' %}<th>Assign / Change Doctor</th>{% endif %}
+              <th>Problem</th><th>Assigned Doctor</th><th>Status</th><th>Appointment</th><th>History</th>
+              {% if current_role != 'owner' %}<th>Change Date / Time</th>{% endif %}
             </tr>
           </thead>
           <tbody>
@@ -42,17 +42,7 @@
                 <div class="small text-muted">{{ patient.specialization }}</div>
               </td>
               <td><span class="badge status-badge">{{ patient.status }}</span></td>
-              <td>
-                {% if current_role == 'owner' %}
-                {{ patient.appointment_date or '-' }}
-                {% else %}
-                <form method="post" action="{{ url_for('change_appointment_date') }}" class="date-form">
-                  <input type="hidden" name="appointment_id" value="{{ patient.appointment_id }}">
-                  <input type="date" class="form-control form-control-sm" name="appointment_date" value="{{ patient.appointment_date }}" required>
-                  <button class="btn btn-sm btn-outline-primary">Change</button>
-                </form>
-                {% endif %}
-              </td>
+              <td>{{ patient.appointment_display or '-' }}</td>
               <td>
                 {% set patient_history = histories.get(patient.id, []) %}
                 <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#historyPatient{{ patient.id }}">
@@ -61,16 +51,12 @@
               </td>
               {% if current_role != 'owner' %}
               <td>
-                <form method="post" action="{{ url_for('assign') }}" class="assign-form">
-                  <input type="hidden" name="patient_id" value="{{ patient.id }}">
-                  <input class="form-control form-control-sm" name="problem" placeholder="Problem type" value="{% if patient.problem != 'Not Assigned' and patient.problem != 'New Visit' %}{{ patient.problem }}{% endif %}" required>
-                  <select class="form-select form-select-sm" name="doctor_id" required>
-                    <option value="">Doctor</option>
-                    {% for doctor in doctors %}
-                    <option value="{{ doctor.id }}">{{ doctor.name }} - {{ doctor.specialization }}</option>
-                    {% endfor %}
-                  </select>
-                  <button class="btn btn-sm btn-success">Assign</button>
+                {% set appointment_parts = (patient.appointment_date or '').split(' ') %}
+                <form method="post" action="{{ url_for('change_appointment_date') }}" class="date-time-form">
+                  <input type="hidden" name="appointment_id" value="{{ patient.appointment_id }}">
+                  <input type="date" class="form-control form-control-sm" name="appointment_date" value="{{ appointment_parts[0] if appointment_parts|length > 0 else '' }}" required>
+                  <input type="time" class="form-control form-control-sm" name="appointment_time" value="{{ appointment_parts[1] if appointment_parts|length > 1 else '10:00' }}" min="10:00" max="21:00" step="900" required>
+                  <button class="btn btn-sm btn-outline-primary">Change</button>
                 </form>
               </td>
               {% endif %}

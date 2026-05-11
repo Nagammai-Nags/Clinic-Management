@@ -2,16 +2,20 @@ void print_stats() {
     int pc = 0, ac = 0, ic = 0, pending = 0;
     float total = 0, paid = 0;
 
-    Patient *p = patients;
-    while (p) {
-        pc++;
-        p = p->next;
+    for (int b = 0; b < HASH_SIZE; b++) {
+        Patient *p = patientTable[b];
+        while (p) {
+            pc++;
+            p = p->next;
+        }
     }
 
-    Appointment *a = appointments;
-    while (a) {
-        ac++;
-        a = a->next;
+    for (int b = 0; b < HASH_SIZE; b++) {
+        Appointment *a = appointmentTable[b];
+        while (a) {
+            ac++;
+            a = a->next;
+        }
     }
 
     Invoice *i = invoices;

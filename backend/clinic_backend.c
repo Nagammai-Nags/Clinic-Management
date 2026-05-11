@@ -19,12 +19,14 @@ int main(int argc, char *argv[]) {
         return backend_login_info();
     } else if (strcmp(cmd, "stats") == 0) {
         print_stats();
+    } else if (strcmp(cmd, "hash_tables") == 0) {
+        print_hash_tables();
     } else if (strcmp(cmd, "list_patients") == 0) {
         print_patient_list();
     } else if (strcmp(cmd, "list_doctors") == 0) {
         print_doctors();
-    } else if (strcmp(cmd, "add_patient") == 0 && argc >= 9) {
-        return add_patient_record(argv[2], argv[3], argv[4], argv[5], argv[6], argv[7], argv[8]);
+    } else if (strcmp(cmd, "add_patient") == 0 && argc >= 11) {
+        return add_patient_record(argv[2], argv[3], argv[4], argv[5], argv[6], argv[7], argv[8], argv[9], argv[10]);
     } else if (strcmp(cmd, "assign") == 0 && argc >= 5) {
         return assign_patient_to_doctor(argv[2], argv[3], argv[4]);
     } else if (strcmp(cmd, "change_date") == 0 && argc >= 4) {
