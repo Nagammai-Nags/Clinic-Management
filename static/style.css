@@ -528,6 +528,19 @@ h6 {
   max-width: 560px;
 }
 
+.toolbar-wide {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto;
+  gap: 10px;
+  max-width: 860px;
+}
+
+.date-filter-form {
+  display: grid;
+  grid-template-columns: 150px auto auto;
+  gap: 8px;
+}
+
 .appointment-day h5 {
   color: #cdd8ea;
   font-size: 15px;
@@ -647,6 +660,11 @@ h6 {
 
 .date-time-form {
   grid-template-columns: 132px 92px auto;
+}
+
+.change-appointment-form {
+  grid-template-columns: 1fr;
+  gap: 14px;
 }
 
 .form-grid {
@@ -813,8 +831,10 @@ h6 {
   .pay-form,
   .date-form,
   .date-time-form,
+  .date-filter-form,
   .form-grid,
-  .patient-summary {
+  .patient-summary,
+  .toolbar-wide {
     grid-template-columns: 1fr;
   }
 

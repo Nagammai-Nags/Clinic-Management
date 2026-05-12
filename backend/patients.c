@@ -14,7 +14,7 @@ void print_patient_list() {
             }
 
             Doctor *d = a ? find_doctor(a->doctorId) : NULL;
-            printf("%d|%s|%d|%s|%s|%s|%s|%s|%s|%s|%s|%d|%d|%s\n",
+            printf("%d|%s|%d|%s|%s|%s|%s|%s|%s|%s|%s|%d|%d|%s|%s\n",
                 p->id, p->name, p->age, p->gender, p->phone, p->address, p->blood,
                 a ? a->problem : "Not Assigned",
                 d ? d->name : "Not Assigned",
@@ -22,7 +22,8 @@ void print_patient_list() {
                 appointment_display_status(a),
                 a ? a->id : 0,
                 a ? a->doctorId : 0,
-                a ? a->date : "-");
+                a ? a->date : "-",
+                a ? a->endDate : "-");
             p = p->next;
         }
     }
@@ -40,18 +41,23 @@ void print_doctors() {
 
 int assign_patient_to_doctor(char *patientIdText, char *doctorIdText, char *problem) {
     int patientId = atoi(patientIdText);
-    int doctorId = atoi(doctorIdText);
-    if (!find_patient(patientId) || !find_doctor(doctorId)) {
-        printf("ERROR|Invalid patient or doctor\n");
+    (void)doctorIdText;
+    if (!find_patient(patientId)) {
+        printf("ERROR|Invalid patient\n");
         return 1;
     }
 
     Appointment *old = current_appointment_for_patient(patientId);
     if (old && strcmp(old->status, "Not Assigned") == 0) {
-        old->doctorId = doctorId;
         strncpy(old->problem, problem, 79);
         clean(old->problem);
         strcpy(old->status, "Waiting");
+        today(old->date);
+        strcat(old->date, " 10:00");
+        if (!schedule_appointment_with_heap(old, old->date, 0)) {
+            printf("ERROR|No available doctor found\n");
+            return 1;
+        }
         enqueue_appointment(old);
         save_all();
         printf("OK|Patient assigned|%d\n", old->id);
@@ -66,11 +72,16 @@ int assign_patient_to_doctor(char *patientIdText, char *doctorIdText, char *prob
     Appointment *a = calloc(1, sizeof(Appointment));
     a->id = next_appointment_id();
     a->patientId = patientId;
-    a->doctorId = doctorId;
     strncpy(a->problem, problem, 79);
     clean(a->problem);
     strcpy(a->status, "Waiting");
     today(a->date);
+    strcat(a->date, " 10:00");
+    if (!schedule_appointment_with_heap(a, a->date, 0)) {
+        free(a);
+        printf("ERROR|No available doctor found\n");
+        return 1;
+    }
     append_appointment(a);
     enqueue_appointment(a);
     save_all();
@@ -78,8 +89,9 @@ int assign_patient_to_doctor(char *patientIdText, char *doctorIdText, char *prob
     return 0;
 }
 
-int change_appointment_date(char *appointmentIdText, char *appointmentDate) {
+int change_appointment_date(char *appointmentIdText, char *appointmentDate, char *doctorIdText) {
     Appointment *a = find_appointment(atoi(appointmentIdText));
+    int preferredDoctorId = doctorIdText ? atoi(doctorIdText) : 0;
     if (!a) {
         printf("ERROR|Appointment not found\n");
         return 1;
@@ -95,14 +107,24 @@ int change_appointment_date(char *appointmentIdText, char *appointmentDate) {
         return 1;
     }
 
-    if (!doctor_slot_available(a->doctorId, appointmentDate, a)) {
-        printf("ERROR|Doctor already has another patient in this slot\n");
+    if (!appointment_not_in_past(appointmentDate)) {
+        printf("ERROR|Appointment date cannot be before today\n");
         return 1;
     }
 
-    strncpy(a->date, appointmentDate, 19);
-    clean(a->date);
+    if (preferredDoctorId > 0 && !find_doctor(preferredDoctorId)) {
+        printf("ERROR|Invalid doctor\n");
+        return 1;
+    }
+
+    remove_appointment_from_queue(a);
+    if (!schedule_appointment_with_heap(a, appointmentDate, preferredDoctorId)) {
+        enqueue_appointment(a);
+        printf("ERROR|No available doctor found\n");
+        return 1;
+    }
+    enqueue_appointment(a);
     save_all();
-    printf("OK|Appointment date and time changed|%d\n", a->id);
+    printf("OK|Appointment details changed|%d\n", a->id);
     return 0;
 }

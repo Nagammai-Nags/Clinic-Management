@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
     } else if (strcmp(cmd, "assign") == 0 && argc >= 5) {
         return assign_patient_to_doctor(argv[2], argv[3], argv[4]);
     } else if (strcmp(cmd, "change_date") == 0 && argc >= 4) {
-        return change_appointment_date(argv[2], argv[3]);
+        return change_appointment_date(argv[2], argv[3], argc >= 5 ? argv[4] : "0");
     } else if (strcmp(cmd, "queue") == 0) {
         int doctorId = argc >= 3 ? atoi(argv[2]) : 0;
         print_queue(doctorId);

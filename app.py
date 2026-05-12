@@ -117,6 +117,15 @@ def group_patients_by_date(patient_list):
     ]
 
 
+def filter_patients_by_date(patient_list, appointment_day):
+    if not appointment_day:
+        return patient_list
+    return [
+        patient for patient in patient_list
+        if (patient.get("appointment_date") or "").split(" ", 1)[0] == appointment_day
+    ]
+
+
 def format_time_12h(time_text):
     try:
         return datetime.strptime(time_text, "%H:%M").strftime("%I:%M %p")
@@ -126,12 +135,17 @@ def format_time_12h(time_text):
 
 def add_appointment_display(patient_list):
     for patient in patient_list:
-        appointment = patient.get("appointment_date") or ""
-        parts = appointment.split(" ", 1)
+        appointment_start = patient.get("appointment_date") or ""
+        appointment_end = patient.get("appointment_end") or ""
+        parts = appointment_start.split(" ", 1)
         if len(parts) == 2:
+            end_parts = appointment_end.split(" ", 1)
+            end_time = format_time_12h(end_parts[1]) if len(end_parts) == 2 else ""
             patient["appointment_display"] = f"{parts[0]} {format_time_12h(parts[1])}"
+            if end_time:
+                patient["appointment_display"] = f"{patient['appointment_display']} - {end_time}"
         else:
-            patient["appointment_display"] = appointment
+            patient["appointment_display"] = appointment_start
     return patient_list
 
 
@@ -253,16 +267,20 @@ def patients():
         return guard
     patient_fields = [
         "id", "name", "age", "gender", "phone", "address", "blood",
-        "problem", "doctor", "specialization", "status", "appointment_id", "doctor_id", "appointment_date",
+        "problem", "doctor", "specialization", "status", "appointment_id", "doctor_id", "appointment_date", "appointment_end",
     ]
     doctor_fields = ["id", "name", "specialization", "available", "fee"]
     patient_list = add_appointment_display(rows("list_patients", patient_fields))
+    selected_date = request.args.get("appointment_date", "").strip()
+    filtered_patients = filter_patients_by_date(patient_list, selected_date)
     return render_template(
         "patients.html",
-        patients=patient_list,
-        patient_groups=group_patients_by_date(patient_list),
+        patients=filtered_patients,
+        patient_groups=group_patients_by_date(filtered_patients),
         doctors=rows("list_doctors", doctor_fields),
-        histories=patient_histories(patient["id"] for patient in patient_list),
+        histories=patient_histories(patient["id"] for patient in filtered_patients),
+        selected_date=selected_date,
+        today=date.today().isoformat(),
     )
 
 
@@ -282,7 +300,7 @@ def add_patient():
             request.form["address"],
             request.form["blood"],
             appointment_date_time,
-            request.form["doctor_id"],
+            "0",
             request.form["problem"],
         )
         flash(output.replace("|", " - "), "success")
@@ -290,7 +308,7 @@ def add_patient():
     doctor_fields = ["id", "name", "specialization", "available", "fee"]
     patient_fields = [
         "id", "name", "age", "gender", "phone", "address", "blood",
-        "problem", "doctor", "specialization", "status", "appointment_id", "doctor_id", "appointment_date",
+        "problem", "doctor", "specialization", "status", "appointment_id", "doctor_id", "appointment_date", "appointment_end",
     ]
     patient_list = add_appointment_display(rows("list_patients", patient_fields))
     return render_template(
@@ -317,7 +335,7 @@ def change_appointment_date():
     if guard:
         return guard
     appointment_date_time = f"{request.form['appointment_date']} {request.form['appointment_time']}"
-    output = run_backend("change_date", request.form["appointment_id"], appointment_date_time)
+    output = run_backend("change_date", request.form["appointment_id"], appointment_date_time, request.form.get("doctor_id", "0"))
     flash(output.replace("|", " - "), "success")
     return redirect(url_for("patients"))
 
@@ -335,7 +353,7 @@ def doctor():
     queue_fields = ["appointment_id", "patient_id", "patient_name", "doctor", "problem", "status", "date"]
     patient_fields = [
         "id", "name", "age", "gender", "phone", "address", "blood",
-        "problem", "doctor", "specialization", "status", "appointment_id", "doctor_id", "appointment_date",
+        "problem", "doctor", "specialization", "status", "appointment_id", "doctor_id", "appointment_date", "appointment_end",
     ]
     queue = rows("queue", queue_fields, selected)
     patient_lookup = {patient["id"]: patient for patient in add_appointment_display(rows("list_patients", patient_fields))}

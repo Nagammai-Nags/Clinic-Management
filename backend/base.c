@@ -5,6 +5,7 @@
 
 #define DATA_DIR "data"
 #define HASH_SIZE 101
+#define CONSULTATION_MINUTES 15
 
 typedef struct Patient {
     int id;
@@ -22,7 +23,7 @@ typedef struct Doctor {
 
 typedef struct Appointment {
     int id, patientId, doctorId;
-    char problem[80], status[30], date[20];
+    char problem[80], status[30], date[20], endDate[20];
     struct Appointment *next;
 } Appointment;
 
@@ -50,6 +51,17 @@ typedef struct Invoice {
     char status[30], method[30], date[20];
     struct Invoice *next;
 } Invoice;
+
+typedef struct DoctorHeapNode {
+    int doctorId;
+    time_t nextAvailableTime;
+    int activePatientCount;
+} DoctorHeapNode;
+
+typedef struct MinHeap {
+    DoctorHeapNode nodes[HASH_SIZE];
+    int size;
+} MinHeap;
 
 Patient *patientTable[HASH_SIZE] = { NULL };
 Doctor *doctorTable[HASH_SIZE] = { NULL };
@@ -87,6 +99,47 @@ void today(char *out) {
     time_t t = time(NULL);
     struct tm *tm_info = localtime(&t);
     strftime(out, 20, "%Y-%m-%d", tm_info);
+}
+
+int appointment_not_in_past(char *appointmentDate) {
+    char currentDate[20];
+    today(currentDate);
+    return strncmp(appointmentDate, currentDate, 10) >= 0;
+}
+
+time_t parse_appointment_time(char *appointmentDate) {
+    struct tm tm_info = { 0 };
+    int year, month, day, hour, minute;
+    if (sscanf(appointmentDate, "%d-%d-%d %d:%d", &year, &month, &day, &hour, &minute) != 5) {
+        return (time_t)-1;
+    }
+
+    tm_info.tm_year = year - 1900;
+    tm_info.tm_mon = month - 1;
+    tm_info.tm_mday = day;
+    tm_info.tm_hour = hour;
+    tm_info.tm_min = minute;
+    tm_info.tm_sec = 0;
+    tm_info.tm_isdst = -1;
+    return mktime(&tm_info);
+}
+
+void format_appointment_time(time_t value, char *out) {
+    struct tm *tm_info = localtime(&value);
+    strftime(out, 20, "%Y-%m-%d %H:%M", tm_info);
+}
+
+time_t appointment_end_time(Appointment *a) {
+    time_t start = parse_appointment_time(a->date);
+    if (strlen(a->endDate) == 16) {
+        time_t savedEnd = parse_appointment_time(a->endDate);
+        if (savedEnd != (time_t)-1) return savedEnd;
+    }
+    return start + (CONSULTATION_MINUTES * 60);
+}
+
+int time_ranges_overlap(time_t startA, time_t endA, time_t startB, time_t endB) {
+    return startA < endB && startB < endA;
 }
 
 void trim_newline(char *s) {
@@ -134,18 +187,163 @@ Appointment *find_appointment(int id) {
 }
 
 int doctor_slot_available(int doctorId, char *appointmentDate, Appointment *ignore) {
+    time_t requestedStart = parse_appointment_time(appointmentDate);
+    if (requestedStart == (time_t)-1) return 0;
+    time_t requestedEnd = requestedStart + (CONSULTATION_MINUTES * 60);
+
     for (int b = 0; b < HASH_SIZE; b++) {
         Appointment *a = appointmentTable[b];
         while (a) {
+            time_t appointmentStart = parse_appointment_time(a->date);
+            time_t appointmentEnd = appointment_end_time(a);
             if (a != ignore &&
                 a->doctorId == doctorId &&
-                strcmp(a->date, appointmentDate) == 0 &&
+                appointmentStart != (time_t)-1 &&
+                time_ranges_overlap(requestedStart, requestedEnd, appointmentStart, appointmentEnd) &&
                 strcmp(a->status, "Completed") != 0) {
                 return 0;
             }
             a = a->next;
         }
     }
+    return 1;
+}
+
+int compare_doctor_nodes(DoctorHeapNode a, DoctorHeapNode b) {
+    if (a.nextAvailableTime < b.nextAvailableTime) return -1;
+    if (a.nextAvailableTime > b.nextAvailableTime) return 1;
+    if (a.activePatientCount < b.activePatientCount) return -1;
+    if (a.activePatientCount > b.activePatientCount) return 1;
+    return a.doctorId - b.doctorId;
+}
+
+void swap_doctor_nodes(DoctorHeapNode *a, DoctorHeapNode *b) {
+    DoctorHeapNode temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+void heapifyUp(MinHeap *heap, int index) {
+    while (index > 0) {
+        int parent = (index - 1) / 2;
+        if (compare_doctor_nodes(heap->nodes[index], heap->nodes[parent]) >= 0) return;
+        swap_doctor_nodes(&heap->nodes[index], &heap->nodes[parent]);
+        index = parent;
+    }
+}
+
+void heapifyDown(MinHeap *heap, int index) {
+    while (1) {
+        int left = (index * 2) + 1;
+        int right = (index * 2) + 2;
+        int smallest = index;
+
+        if (left < heap->size && compare_doctor_nodes(heap->nodes[left], heap->nodes[smallest]) < 0) {
+            smallest = left;
+        }
+        if (right < heap->size && compare_doctor_nodes(heap->nodes[right], heap->nodes[smallest]) < 0) {
+            smallest = right;
+        }
+        if (smallest == index) return;
+
+        swap_doctor_nodes(&heap->nodes[index], &heap->nodes[smallest]);
+        index = smallest;
+    }
+}
+
+void insertDoctor(MinHeap *heap, DoctorHeapNode node) {
+    if (heap->size >= HASH_SIZE) return;
+    heap->nodes[heap->size] = node;
+    heapifyUp(heap, heap->size);
+    heap->size++;
+}
+
+DoctorHeapNode extractMinDoctor(MinHeap *heap) {
+    DoctorHeapNode empty = { 0, 0, 0 };
+    if (heap->size <= 0) return empty;
+
+    DoctorHeapNode root = heap->nodes[0];
+    heap->size--;
+    if (heap->size > 0) {
+        heap->nodes[0] = heap->nodes[heap->size];
+        heapifyDown(heap, 0);
+    }
+    return root;
+}
+
+void updateDoctorAvailability(DoctorHeapNode *node, time_t appointmentEndTime) {
+    node->nextAvailableTime = appointmentEndTime;
+    node->activePatientCount++;
+}
+
+int active_appointment_count(int doctorId) {
+    int count = 0;
+    for (int b = 0; b < HASH_SIZE; b++) {
+        Appointment *a = appointmentTable[b];
+        while (a) {
+            if (a->doctorId == doctorId && strcmp(a->status, "Completed") != 0) count++;
+            a = a->next;
+        }
+    }
+    return count;
+}
+
+time_t next_available_time_for_doctor(int doctorId, time_t requestedStart, Appointment *ignore) {
+    time_t candidate = requestedStart;
+    int changed = 1;
+
+    while (changed) {
+        changed = 0;
+        time_t candidateEnd = candidate + (CONSULTATION_MINUTES * 60);
+
+        for (int b = 0; b < HASH_SIZE; b++) {
+            Appointment *a = appointmentTable[b];
+            while (a) {
+                if (a != ignore && a->doctorId == doctorId && strcmp(a->status, "Completed") != 0) {
+                    time_t appointmentStart = parse_appointment_time(a->date);
+                    time_t appointmentEnd = appointment_end_time(a);
+                    if (appointmentStart != (time_t)-1 &&
+                        time_ranges_overlap(candidate, candidateEnd, appointmentStart, appointmentEnd)) {
+                        candidate = appointmentEnd;
+                        changed = 1;
+                    }
+                }
+                a = a->next;
+            }
+        }
+    }
+
+    return candidate;
+}
+
+int schedule_appointment_with_heap(Appointment *appointment, char *requestedStartText, int preferredDoctorId) {
+    time_t requestedStart = parse_appointment_time(requestedStartText);
+    if (requestedStart == (time_t)-1) return 0;
+
+    MinHeap heap = { 0 };
+    for (int b = 0; b < HASH_SIZE; b++) {
+        Doctor *d = doctorTable[b];
+        while (d) {
+            if ((preferredDoctorId <= 0 || d->id == preferredDoctorId) && strcmp(d->available, "Yes") == 0) {
+                DoctorHeapNode node;
+                node.doctorId = d->id;
+                node.nextAvailableTime = next_available_time_for_doctor(d->id, requestedStart, appointment);
+                node.activePatientCount = active_appointment_count(d->id);
+                insertDoctor(&heap, node);
+            }
+            d = d->next;
+        }
+    }
+
+    if (heap.size == 0) return 0;
+
+    DoctorHeapNode chosen = extractMinDoctor(&heap);
+    time_t appointmentEnd = chosen.nextAvailableTime + (CONSULTATION_MINUTES * 60);
+    updateDoctorAvailability(&chosen, appointmentEnd);
+
+    appointment->doctorId = chosen.doctorId;
+    format_appointment_time(chosen.nextAvailableTime, appointment->date);
+    format_appointment_time(appointmentEnd, appointment->endDate);
     return 1;
 }
 
@@ -448,6 +646,10 @@ void load_appointments() {
         tok = strtok(NULL, "|"); if (tok) strcpy(a->problem, tok);
         tok = strtok(NULL, "|"); if (tok) strcpy(a->status, tok);
         tok = strtok(NULL, "|"); if (tok) strcpy(a->date, tok);
+        tok = strtok(NULL, "|"); if (tok) strcpy(a->endDate, tok);
+        if (strlen(a->endDate) == 0 && valid_appointment_slot(a->date)) {
+            format_appointment_time(parse_appointment_time(a->date) + (CONSULTATION_MINUTES * 60), a->endDate);
+        }
         append_appointment(a);
         enqueue_appointment(a);
     }
@@ -537,7 +739,7 @@ void save_appointments() {
     for (int b = 0; b < HASH_SIZE; b++) {
         Appointment *a = appointmentTable[b];
         while (a) {
-            fprintf(f, "%d|%d|%d|%s|%s|%s\n", a->id, a->patientId, a->doctorId, a->problem, a->status, a->date);
+            fprintf(f, "%d|%d|%d|%s|%s|%s|%s\n", a->id, a->patientId, a->doctorId, a->problem, a->status, a->date, a->endDate);
             a = a->next;
         }
     }

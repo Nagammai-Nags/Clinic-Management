@@ -6,26 +6,16 @@
   <div><label class="form-label">Age</label><input type="number" class="form-control" name="age" required></div>
   <div><label class="form-label">Gender</label><select class="form-select" name="gender"><option>Male</option><option>Female</option><option>Other</option></select></div>
   <div><label class="form-label">Phone</label><input class="form-control" name="phone" required></div>
-  <div><label class="form-label">Appointment Date</label><input type="date" class="form-control" name="appointment_date" value="{{ today }}" required></div>
+  <div><label class="form-label">Appointment Date</label><input type="date" class="form-control" name="appointment_date" value="{{ today }}" min="{{ today }}" required></div>
   <div>
     <label class="form-label">Appointment Time</label>
     <input type="time" class="form-control" name="appointment_time" value="10:00" min="10:00" max="21:00" step="900" required>
     <div class="form-hint">10:00 AM to 09:00 PM, 15-minute appointments</div>
   </div>
-  <div>
-    <label class="form-label">Doctor</label>
-    <select class="form-select" name="doctor_id" required>
-      <option value="">Select doctor</option>
-      {% for doctor in doctors %}
-      <option value="{{ doctor.id }}" data-available="{{ doctor.available }}">
-        {{ doctor.name }} - {{ doctor.specialization }}{% if doctor.available != 'Yes' %} ({{ doctor.available }}){% endif %}
-      </option>
-      {% endfor %}
-    </select>
-  </div>
+  <div class="availability-note">Doctor will be assigned automatically using the earliest available slot.</div>
   <div><label class="form-label">Blood Group</label><input class="form-control" name="blood" placeholder="O+"></div>
   <div class="grid-wide"><label class="form-label">Problem</label><input class="form-control" name="problem" placeholder="Fever, skin allergy, chest pain..." required></div>
-  <div class="grid-wide availability-note" id="doctorAvailability">Select doctor and time to see availability.</div>
+  <div class="grid-wide availability-note" id="doctorAvailability">The scheduler will pick the doctor who becomes free earliest.</div>
   <div class="grid-wide"><label class="form-label">Address</label><textarea class="form-control" name="address" required></textarea></div>
   <div class="grid-wide"><button class="btn btn-primary">Save Patient & Assign Doctor</button></div>
 </form>

@@ -81,15 +81,13 @@ if (appointmentForm) {
   };
 
   const updateAvailability = () => {
-    const option = doctorSelect.selectedOptions[0];
-    const doctorId = doctorSelect.value;
     const dateValue = dateInput.value;
     const timeValue = timeInput.value;
 
     note.classList.remove("availability-note--ok", "availability-note--busy", "availability-note--warn");
 
-    if (!doctorId || !dateValue || !timeValue) {
-      note.textContent = "Select doctor and time to see availability.";
+    if (!dateValue || !timeValue) {
+      note.textContent = "Select date and time to preview automatic scheduling.";
       submitButton.disabled = false;
       return;
     }
@@ -101,6 +99,22 @@ if (appointmentForm) {
         ? `Appointments take 15 minutes. Timing is 10:00 AM to 09:00 PM. Use ${suggestion}.`
         : "Appointments take 15 minutes. Timing is 10:00 AM to 09:00 PM.";
       submitButton.disabled = true;
+      return;
+    }
+
+    if (!doctorSelect) {
+      note.classList.add("availability-note--ok");
+      note.textContent = `The scheduler will assign the earliest available doctor from ${formatMinute12h(parseTime(timeValue))}.`;
+      submitButton.disabled = false;
+      return;
+    }
+
+    const option = doctorSelect.selectedOptions[0];
+    const doctorId = doctorSelect.value;
+    if (!doctorId) {
+      note.classList.add("availability-note--ok");
+      note.textContent = `The scheduler will assign the earliest available doctor from ${formatMinute12h(parseTime(timeValue))}.`;
+      submitButton.disabled = false;
       return;
     }
 
@@ -127,7 +141,7 @@ if (appointmentForm) {
     submitButton.disabled = false;
   };
 
-  doctorSelect.addEventListener("change", updateAvailability);
+  if (doctorSelect) doctorSelect.addEventListener("change", updateAvailability);
   dateInput.addEventListener("change", updateAvailability);
   timeInput.addEventListener("change", updateAvailability);
   timeInput.addEventListener("input", updateAvailability);

@@ -9,14 +9,15 @@ int add_patient_record(
     char *doctorIdText,
     char *problem
 ) {
-    int doctorId = atoi(doctorIdText);
-    if (!find_doctor(doctorId)) {
-        printf("ERROR|Invalid doctor\n");
-        return 1;
-    }
+    (void)doctorIdText;
 
     if (!valid_appointment_slot(appointmentDate)) {
         printf("ERROR|Appointment time must be a 15-minute slot from 10:00 AM to 09:00 PM\n");
+        return 1;
+    }
+
+    if (!appointment_not_in_past(appointmentDate)) {
+        printf("ERROR|Appointment date cannot be before today\n");
         return 1;
     }
 
@@ -29,43 +30,36 @@ int add_patient_record(
     Patient *existingPatient = find_patient_by_phone(phone);
     if (existingPatient) {
         Appointment *activeAppointment = current_appointment_for_patient(existingPatient->id);
-        if (!doctor_slot_available(doctorId, appointmentDate, activeAppointment)) {
-            printf("ERROR|Doctor already has another patient in this slot\n");
-            return 1;
-        }
-
         if (!activeAppointment) {
             Appointment *newVisit = calloc(1, sizeof(Appointment));
             newVisit->id = next_appointment_id();
             newVisit->patientId = existingPatient->id;
-            newVisit->doctorId = doctorId;
             strncpy(newVisit->problem, problem, 79);
             clean(newVisit->problem);
             strcpy(newVisit->status, "Waiting");
-            strncpy(newVisit->date, appointmentDate, 19);
-            clean(newVisit->date);
+            if (!schedule_appointment_with_heap(newVisit, appointmentDate, 0)) {
+                free(newVisit);
+                printf("ERROR|No available doctor found\n");
+                return 1;
+            }
             append_appointment(newVisit);
             enqueue_appointment(newVisit);
             save_all();
         } else {
             remove_appointment_from_queue(activeAppointment);
-            activeAppointment->doctorId = doctorId;
             strncpy(activeAppointment->problem, problem, 79);
             clean(activeAppointment->problem);
             strcpy(activeAppointment->status, "Waiting");
-            strncpy(activeAppointment->date, appointmentDate, 19);
-            clean(activeAppointment->date);
+            if (!schedule_appointment_with_heap(activeAppointment, appointmentDate, 0)) {
+                printf("ERROR|No available doctor found\n");
+                return 1;
+            }
             enqueue_appointment(activeAppointment);
             save_all();
         }
 
         printf("OK|Existing patient assigned for visit|%d\n", existingPatient->id);
         return 0;
-    }
-
-    if (!doctor_slot_available(doctorId, appointmentDate, NULL)) {
-        printf("ERROR|Doctor already has another patient in this slot\n");
-        return 1;
     }
 
     /*
@@ -103,22 +97,25 @@ int add_patient_record(
     today(newPatient->firstVisit);
 
     /*
-        Step 5: Add the patient to the linked list and save all records.
-    */
-    append_patient(newPatient);
-
-    /*
-        Step 6: Create the appointment and immediately assign the doctor.
+        Step 5: Create the appointment and automatically assign the earliest available doctor.
     */
     Appointment *newVisit = calloc(1, sizeof(Appointment));
     newVisit->id = next_appointment_id();
     newVisit->patientId = newPatient->id;
-    newVisit->doctorId = doctorId;
     strncpy(newVisit->problem, problem, 79);
     clean(newVisit->problem);
     strcpy(newVisit->status, "Waiting");
-    strncpy(newVisit->date, appointmentDate, 19);
-    clean(newVisit->date);
+    if (!schedule_appointment_with_heap(newVisit, appointmentDate, 0)) {
+        free(newVisit);
+        free(newPatient);
+        printf("ERROR|No available doctor found\n");
+        return 1;
+    }
+
+    /*
+        Step 6: Add the patient and appointment to the linked lists and save all records.
+    */
+    append_patient(newPatient);
     append_appointment(newVisit);
     enqueue_appointment(newVisit);
 
